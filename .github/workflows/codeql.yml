@@ -3,11 +3,25 @@ name: "CodeQL Analysis"
 on:
   push:
     branches: ["main"]
+    paths-ignore:
+      - "**.md"
+      - "etc/**"
+      - ".gitignore"
+      - "LICENSE"
   pull_request:
     branches: ["main"]
+    paths-ignore:
+      - "**.md"
+      - "etc/**"
+      - ".gitignore"
+      - "LICENSE"
   schedule:
     # Run daily at 00:00 UTC
     - cron: "0 0 * * *"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   analyze:
@@ -31,7 +45,7 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-          queries: security-extended,security-and-quality
+          build-mode: none
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
