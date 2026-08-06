@@ -1,0 +1,1 @@
+ALTER TABLE "leaf_form_fields" ADD COLUMN "font" text DEFAULT 'Inter';

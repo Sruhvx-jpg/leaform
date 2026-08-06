@@ -1,6 +1,6 @@
 {
-  "id": "303df08f-1eb6-45a2-81f0-92e5fab4fd2e",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "c2819efa-137f-4057-91a2-de49e7324434",
+  "prevId": "67316c66-5019-4a69-8be7-2e52b01d6186",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -166,6 +166,12 @@
           "notNull": true,
           "default": "'drafted'"
         },
+        "theme": {
+          "name": "theme",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "owner_id": {
           "name": "owner_id",
           "type": "uuid",
@@ -263,6 +269,19 @@
           "primaryKey": false,
           "notNull": true,
           "default": 0
+        },
+        "font": {
+          "name": "font",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'Inter'"
+        },
+        "style": {
+          "name": "style",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
         },
         "options": {
           "name": "options",

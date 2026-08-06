@@ -7,12 +7,13 @@ import {
   text,
 } from "drizzle-orm/pg-core";
 
-export const usersTable = pgTable("users", {
+export const usersTable = pgTable("leaf_account", {
   id: uuid("id").primaryKey().defaultRandom(),
 
   fullName: varchar("full_name", { length: 80 }).notNull(),
 
   email: varchar("email", { length: 255 }).notNull().unique(),
+  password: text("password"),
   emailVerified: boolean("email_verified").default(false),
 
   profileImageUrl: text("profile_image_url"),

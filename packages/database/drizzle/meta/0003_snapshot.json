@@ -1,6 +1,6 @@
 {
-  "id": "303df08f-1eb6-45a2-81f0-92e5fab4fd2e",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "1acc7826-364e-4bfc-987d-2e8152db5c35",
+  "prevId": "c2819efa-137f-4057-91a2-de49e7324434",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -166,6 +166,12 @@
           "notNull": true,
           "default": "'drafted'"
         },
+        "theme": {
+          "name": "theme",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "owner_id": {
           "name": "owner_id",
           "type": "uuid",
@@ -263,6 +269,19 @@
           "primaryKey": false,
           "notNull": true,
           "default": 0
+        },
+        "font": {
+          "name": "font",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'Inter'"
+        },
+        "style": {
+          "name": "style",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
         },
         "options": {
           "name": "options",
@@ -693,6 +712,65 @@
           ]
         }
       },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.leaf_form_submissions": {
+      "name": "leaf_form_submissions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "form_id": {
+          "name": "form_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "answers": {
+          "name": "answers",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "submitted_at": {
+          "name": "submitted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "respondent_ip": {
+          "name": "respondent_ip",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "leaf_form_submissions_form_id_leaf_forms_id_fk": {
+          "name": "leaf_form_submissions_form_id_leaf_forms_id_fk",
+          "tableFrom": "leaf_form_submissions",
+          "tableTo": "leaf_forms",
+          "columnsFrom": [
+            "form_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
