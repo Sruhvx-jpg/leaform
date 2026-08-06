@@ -143,7 +143,8 @@ export function FormsContent() {
                 Build a New Form from Scratch
               </h2>
               <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                Start with a blank canvas. Drag and drop input fields, customize colors, fonts, styles, and set up multi-page logic flows.
+                Start with a blank canvas. Drag and drop input fields, customize colors, fonts,
+                styles, and set up multi-page logic flows.
               </p>
             </div>
 
@@ -189,9 +190,7 @@ export function FormsContent() {
                       <h3 className="font-bold text-slate-900 text-base group-hover:text-emerald-800 transition-colors">
                         {layout.title}
                       </h3>
-                      <p className="text-xs text-slate-500 leading-relaxed">
-                        {layout.description}
-                      </p>
+                      <p className="text-xs text-slate-500 leading-relaxed">{layout.description}</p>
                     </div>
 
                     <div className="flex items-center gap-1 text-xs font-semibold text-[#0d5c41] pt-4 group-hover:gap-2 transition-all">
@@ -212,9 +211,7 @@ export function FormsContent() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-bold text-slate-900">My Forms</h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                All forms created by your account.
-              </p>
+              <p className="text-xs text-slate-500 mt-0.5">All forms created by your account.</p>
             </div>
           </div>
 

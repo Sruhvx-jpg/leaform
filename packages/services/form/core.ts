@@ -6,11 +6,7 @@
 import { eq, and } from "drizzle-orm";
 
 // in house modules
-import db, {
-  formsTable,
-  formFieldsTable,
-  formSubmissionsTable,
-} from "@repo/database";
+import db, { formsTable, formFieldsTable, formSubmissionsTable } from "@repo/database";
 import { apiErr } from "@repo/utils";
 
 class FormService {
@@ -18,15 +14,12 @@ class FormService {
 
   private async getFormsByOwnerId(ownerId: string) {
     try {
-      const forms = await db
-        .select()
-        .from(formsTable)
-        .where(eq(formsTable.ownerId, ownerId));
+      const forms = await db.select().from(formsTable).where(eq(formsTable.ownerId, ownerId));
 
       return forms;
     } catch (error) {
       throw new Error(
-        `getFormsByOwnerId failed: ${error instanceof Error ? error.message : String(error)}`
+        `getFormsByOwnerId failed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -36,7 +29,7 @@ class FormService {
     title: string,
     description?: string,
     theme?: any,
-    state?: "drafted" | "published" | "closed"
+    state?: "drafted" | "published" | "closed",
   ) {
     try {
       const [newForm] = await db
@@ -57,7 +50,7 @@ class FormService {
       return newForm;
     } catch (error) {
       throw new Error(
-        `createFormRow failed: ${error instanceof Error ? error.message : String(error)}`
+        `createFormRow failed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -78,11 +71,14 @@ class FormService {
         options: f.options || null,
       }));
 
-      const inserted = await db.insert(formFieldsTable).values(fieldRows as any).returning();
+      const inserted = await db
+        .insert(formFieldsTable)
+        .values(fieldRows as any)
+        .returning();
       return inserted;
     } catch (error) {
       throw new Error(
-        `saveFieldsRows failed: ${error instanceof Error ? error.message : String(error)}`
+        `saveFieldsRows failed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -114,7 +110,7 @@ class FormService {
       theme?: any;
       state?: "drafted" | "published" | "closed";
       fields: any[];
-    }
+    },
   ) {
     try {
       let form: any = null;
@@ -133,9 +129,7 @@ class FormService {
 
         form = updated;
         if (form) {
-          await db
-            .delete(formFieldsTable)
-            .where(eq(formFieldsTable.formId, form.id));
+          await db.delete(formFieldsTable).where(eq(formFieldsTable.formId, form.id));
         }
       }
 
@@ -145,7 +139,7 @@ class FormService {
           payload.title,
           payload.description,
           payload.theme,
-          payload.state
+          payload.state,
         );
       }
 
@@ -206,13 +200,10 @@ class FormService {
   public async submitFormResponse(
     formId: string,
     answers: Array<{ fieldId?: string; label: string; value: any }>,
-    respondentIp?: string
+    respondentIp?: string,
   ) {
     try {
-      const [form] = await db
-        .select()
-        .from(formsTable)
-        .where(eq(formsTable.id, formId));
+      const [form] = await db.select().from(formsTable).where(eq(formsTable.id, formId));
 
       if (!form) {
         throw apiErr.dataNotFound("Form not found.");
@@ -237,10 +228,7 @@ class FormService {
 
   private async getFormWithFields(formId: string) {
     try {
-      const [form] = await db
-        .select()
-        .from(formsTable)
-        .where(eq(formsTable.id, formId));
+      const [form] = await db.select().from(formsTable).where(eq(formsTable.id, formId));
 
       if (!form) return null;
 
@@ -255,7 +243,7 @@ class FormService {
       };
     } catch (error) {
       throw new Error(
-        `getFormWithFields failed: ${error instanceof Error ? error.message : String(error)}`
+        `getFormWithFields failed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -288,7 +276,12 @@ class FormService {
         { type: "url", name: "Website URL", category: "Contact", icon: "Globe" },
         { type: "number", name: "Number Input", category: "Choice", icon: "Hash" },
         { type: "slider", name: "Range Slider", category: "Choice", icon: "Sliders" },
-        { type: "multiple_choice", name: "Multiple Choice", category: "Choice", icon: "CheckSquare" },
+        {
+          type: "multiple_choice",
+          name: "Multiple Choice",
+          category: "Choice",
+          icon: "CheckSquare",
+        },
         { type: "checkboxes", name: "Checkboxes", category: "Choice", icon: "CheckSquare" },
         { type: "dropdown", name: "Dropdown Select", category: "Choice", icon: "ChevronDown" },
         { type: "picture_choice", name: "Picture Choice", category: "Choice", icon: "Image" },
@@ -297,7 +290,12 @@ class FormService {
         { type: "rating", name: "Star Rating", category: "Feedback", icon: "Star" },
         { type: "review", name: "Customer Review", category: "Feedback", icon: "MessageSquare" },
         { type: "nps", name: "Net Promoter Score (NPS)", category: "Feedback", icon: "BarChart3" },
-        { type: "opinion_scale", name: "Opinion Scale", category: "Feedback", icon: "SlidersHorizontal" },
+        {
+          type: "opinion_scale",
+          name: "Opinion Scale",
+          category: "Feedback",
+          icon: "SlidersHorizontal",
+        },
         { type: "yes_no", name: "Yes / No Toggle", category: "Choice", icon: "ToggleLeft" },
         { type: "statement", name: "Statement Block", category: "Layout", icon: "Info" },
         { type: "matrix", name: "Matrix Grid", category: "Advanced", icon: "Grid" },

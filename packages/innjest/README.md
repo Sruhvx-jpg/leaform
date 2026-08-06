@@ -86,11 +86,11 @@ tRPC Call → analyticsMiddleware → AnalyticsCollector.startCall()
 
 ## Package Exports
 
-| Import Path | What You Get |
-|---|---|
+| Import Path            | What You Get                                                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `@repo/innjest/server` | `AnalyticsCollector`, `analyticsCollector`, `createAnalyticsMiddleware`, `registerTRPCEndpoint`, `createAnalyticsRoutes` |
-| `@repo/innjest/client` | `AnalyticsDashboard` (React component) |
-| `@repo/innjest/types` | All TypeScript interfaces |
+| `@repo/innjest/client` | `AnalyticsDashboard` (React component)                                                                                   |
+| `@repo/innjest/types`  | All TypeScript interfaces                                                                                                |
 
 ---
 
@@ -108,17 +108,17 @@ A **singleton instance** (`analyticsCollector`) is exported by default. Use it d
 
 #### Methods
 
-| Method | Signature | Description |
-|---|---|---|
-| `startCall` | `(endpoint, method?, userId?, ipAddress?) → string` | Begin tracking a call. Returns a `callId`. |
-| `endCall` | `(callId, statusCode, responseSize, error?) → void` | Complete a tracked call with result data. |
-| `registerEndpoint` | `(metadata: APIMetadata) → void` | Register endpoint metadata (name, method, tags, rate limits). |
-| `getCalls` | `(filters?, limit?, offset?) → APICall[]` | Query stored calls with filtering and pagination. |
-| `getAnalytics` | `(timeWindowMs?) → AnalyticsSummary` | Get aggregate metrics for a time window (default: 1 hour). |
-| `getEndpoints` | `() → APIMetadata[]` | List all registered endpoints. |
-| `getEndpoint` | `(name) → APIMetadata \| undefined` | Get metadata for a specific endpoint. |
-| `clearOldData` | `(olderThanMs?) → void` | Prune calls older than N ms (default: 24h). |
-| `clearData` | `() → void` | Wipe all stored calls and reset counters. |
+| Method             | Signature                                           | Description                                                   |
+| ------------------ | --------------------------------------------------- | ------------------------------------------------------------- |
+| `startCall`        | `(endpoint, method?, userId?, ipAddress?) → string` | Begin tracking a call. Returns a `callId`.                    |
+| `endCall`          | `(callId, statusCode, responseSize, error?) → void` | Complete a tracked call with result data.                     |
+| `registerEndpoint` | `(metadata: APIMetadata) → void`                    | Register endpoint metadata (name, method, tags, rate limits). |
+| `getCalls`         | `(filters?, limit?, offset?) → APICall[]`           | Query stored calls with filtering and pagination.             |
+| `getAnalytics`     | `(timeWindowMs?) → AnalyticsSummary`                | Get aggregate metrics for a time window (default: 1 hour).    |
+| `getEndpoints`     | `() → APIMetadata[]`                                | List all registered endpoints.                                |
+| `getEndpoint`      | `(name) → APIMetadata \| undefined`                 | Get metadata for a specific endpoint.                         |
+| `clearOldData`     | `(olderThanMs?) → void`                             | Prune calls older than N ms (default: 24h).                   |
+| `clearData`        | `() → void`                                         | Wipe all stored calls and reset counters.                     |
 
 #### Example: Manual Call Tracking
 
@@ -127,10 +127,10 @@ import { analyticsCollector } from "@repo/innjest/server";
 
 // Start tracking
 const callId = analyticsCollector.startCall(
-  "user.getProfile",   // endpoint name
-  "query",             // method: 'query' | 'mutation' | 'subscription'
-  "usr_abc123",        // optional userId
-  "127.0.0.1"          // optional IP
+  "user.getProfile", // endpoint name
+  "query", // method: 'query' | 'mutation' | 'subscription'
+  "usr_abc123", // optional userId
+  "127.0.0.1", // optional IP
 );
 
 // ... do work ...
@@ -138,8 +138,8 @@ const callId = analyticsCollector.startCall(
 // Complete tracking
 analyticsCollector.endCall(
   callId,
-  200,                        // HTTP status code
-  JSON.stringify(result).length,  // response size in bytes
+  200, // HTTP status code
+  JSON.stringify(result).length, // response size in bytes
   // error                    // optional Error object for failures
 );
 ```
@@ -160,6 +160,7 @@ export const publicProcedure = t.procedure.use(analyticsMiddleware);
 ```
 
 **What it captures automatically:**
+
 - `path` — tRPC procedure path (e.g. `"health.getHealth"`)
 - `type` — `"query"` | `"mutation"` | `"subscription"`
 - `ctx.user.id` or `ctx.userId` — user identifier (if present in context)
@@ -201,6 +202,7 @@ app.use("/api/analytics", createAnalyticsRoutes());
 ```
 
 This single call gives you:
+
 - **HTML Dashboard** at `/api/analytics/dashboard`
 - **Event Inspector** at `/api/analytics?id=<callId>`
 - **REST API** at `/api/analytics/metrics`, `/calls`, `/endpoints`, etc.
@@ -224,6 +226,7 @@ export default function AdminAnalyticsPage() {
 **Props:** None. The component fetches data from `/api/analytics/*` endpoints automatically.
 
 **Requirements:**
+
 - React 18+ or 19+
 - `recharts` (included as dependency)
 - The Express server must be serving the analytics API routes
@@ -254,11 +257,11 @@ import type {
 interface APICall {
   id: string;
   endpoint: string;
-  method: 'query' | 'mutation' | 'subscription';
-  status: 'success' | 'error' | 'pending';
+  method: "query" | "mutation" | "subscription";
+  status: "success" | "error" | "pending";
   startTime: number;
   endTime?: number;
-  duration?: number;       // milliseconds
+  duration?: number; // milliseconds
   requestSize: number;
   responseSize: number;
   statusCode: number;
@@ -276,9 +279,9 @@ interface AnalyticsSummary {
   totalCalls: number;
   successfulCalls: number;
   failedCalls: number;
-  successRate: number;     // 0-100
+  successRate: number; // 0-100
   avgResponseTime: number; // ms
-  timeWindow: number;      // ms
+  timeWindow: number; // ms
   endpointStats: Record<string, EndpointStats>;
 }
 ```
@@ -289,9 +292,9 @@ interface AnalyticsSummary {
 interface EndpointStats {
   calls: number;
   errors: number;
-  avgTime: number;  // ms
-  p95Time: number;  // ms
-  p99Time: number;  // ms
+  avgTime: number; // ms
+  p95Time: number; // ms
+  p99Time: number; // ms
 }
 ```
 
@@ -300,7 +303,7 @@ interface EndpointStats {
 ```ts
 interface FilterOptions {
   endpoint?: string;
-  status?: 'success' | 'error' | 'pending';
+  status?: "success" | "error" | "pending";
   startDate?: Date | string;
   endDate?: Date | string;
   search?: string;
@@ -314,7 +317,7 @@ interface APIMetadata {
   name: string;
   description?: string;
   endpoint: string;
-  method: 'query' | 'mutation';
+  method: "query" | "mutation";
   isAuthRequired: boolean;
   rateLimit?: RateLimitConfig;
   tags?: string[];
@@ -354,9 +357,7 @@ import { createAnalyticsMiddleware } from "@repo/innjest/server";
 const analyticsMiddleware = createAnalyticsMiddleware();
 
 export const publicProcedure = t.procedure.use(analyticsMiddleware);
-export const protectedProcedure = t.procedure
-  .use(authMiddleware)
-  .use(analyticsMiddleware);
+export const protectedProcedure = t.procedure.use(authMiddleware).use(analyticsMiddleware);
 ```
 
 > **Important:** Place the analytics middleware AFTER auth middleware so it can access `ctx.user.id`.
@@ -407,17 +408,17 @@ app.get("/health", (req, res) => {
 
 All endpoints are relative to the mount path (e.g. `/api/analytics`).
 
-| Method | Path | Description | Query Params |
-|---|---|---|---|
-| `GET` | `/` | Event inspector HTML (or JSON if `Accept: application/json`) | `?id=<callId>`, `?timeWindow=<ms>` |
-| `GET` | `/dashboard` | Dev Server dashboard HTML | — |
-| `GET` | `/metrics` | Aggregate analytics summary | `?timeWindow=<ms>` |
-| `GET` | `/calls` | List tracked API calls | `?endpoint=`, `?status=`, `?search=`, `?limit=`, `?offset=` |
-| `GET` | `/calls/:id` | Get specific call by ID | — |
-| `GET` | `/endpoints` | List registered endpoints | — |
-| `POST` | `/clear` | Clear all stored analytics data | — |
-| `POST` | `/event` | Dispatch a custom event | Body: `{ name, payload }` |
-| `POST` | `/invoke` | Invoke a function (dev testing) | Body: `{ endpoint, payload }` |
+| Method | Path         | Description                                                  | Query Params                                                |
+| ------ | ------------ | ------------------------------------------------------------ | ----------------------------------------------------------- |
+| `GET`  | `/`          | Event inspector HTML (or JSON if `Accept: application/json`) | `?id=<callId>`, `?timeWindow=<ms>`                          |
+| `GET`  | `/dashboard` | Dev Server dashboard HTML                                    | —                                                           |
+| `GET`  | `/metrics`   | Aggregate analytics summary                                  | `?timeWindow=<ms>`                                          |
+| `GET`  | `/calls`     | List tracked API calls                                       | `?endpoint=`, `?status=`, `?search=`, `?limit=`, `?offset=` |
+| `GET`  | `/calls/:id` | Get specific call by ID                                      | —                                                           |
+| `GET`  | `/endpoints` | List registered endpoints                                    | —                                                           |
+| `POST` | `/clear`     | Clear all stored analytics data                              | —                                                           |
+| `POST` | `/event`     | Dispatch a custom event                                      | Body: `{ name, payload }`                                   |
+| `POST` | `/invoke`    | Invoke a function (dev testing)                              | Body: `{ endpoint, payload }`                               |
 
 ### Example: Fetch Metrics
 
@@ -434,8 +435,14 @@ curl http://localhost:4000/api/analytics/metrics?timeWindow=3600000
   "avgResponseTime": 14.7,
   "timeWindow": 3600000,
   "endpointStats": {
-    "health.getHealth": { "calls": 20, "errors": 0, "avgTime": 2.1, "p95Time": 4.5, "p99Time": 5.2 },
-    "auth.login":      { "calls": 12, "errors": 1, "avgTime": 28.3, "p95Time": 45.0, "p99Time": 52.0 }
+    "health.getHealth": {
+      "calls": 20,
+      "errors": 0,
+      "avgTime": 2.1,
+      "p95Time": 4.5,
+      "p99Time": 5.2
+    },
+    "auth.login": { "calls": 12, "errors": 1, "avgTime": 28.3, "p95Time": 45.0, "p99Time": 52.0 }
   }
 }
 ```
@@ -451,23 +458,23 @@ The built-in dashboard is a fully self-contained HTML page (no external framewor
 
 ### Dashboard Tabs
 
-| Tab | What It Shows |
-|---|---|
-| **Functions** | Multi-line wave graph (540px, 4 metrics) + registered function cards with invoke button |
-| **Events Stream** | Live table of received events with click-through to event inspector |
-| **Runs** | Filterable table of all API call runs with status, duration, method |
-| **Apps** | Connected app info (URL, endpoint count, sync status) |
-| **Metrics** | Throughput overview |
-| **Health Monitor** | Ping `/health` and see status code, latency, last ping time |
+| Tab                | What It Shows                                                                           |
+| ------------------ | --------------------------------------------------------------------------------------- |
+| **Functions**      | Multi-line wave graph (540px, 4 metrics) + registered function cards with invoke button |
+| **Events Stream**  | Live table of received events with click-through to event inspector                     |
+| **Runs**           | Filterable table of all API call runs with status, duration, method                     |
+| **Apps**           | Connected app info (URL, endpoint count, sync status)                                   |
+| **Metrics**        | Throughput overview                                                                     |
+| **Health Monitor** | Ping `/health` and see status code, latency, last ping time                             |
 
 ### Graph Metrics (Functions Tab)
 
-| Line Color | Metric |
-|---|---|
-| `#10b981` (Green) | Completed function runs (count) |
-| `#ef4444` (Bright Red) | Failed function runs (count) |
-| `#f87171` (Coral) | Mean execution latency (ms) |
-| `#dc2626` (Dark Red) | Queue throughput volume |
+| Line Color             | Metric                          |
+| ---------------------- | ------------------------------- |
+| `#10b981` (Green)      | Completed function runs (count) |
+| `#ef4444` (Bright Red) | Failed function runs (count)    |
+| `#f87171` (Coral)      | Mean execution latency (ms)     |
+| `#dc2626` (Dark Red)   | Queue throughput volume         |
 
 ### Timeline Range Selector
 
@@ -476,14 +483,14 @@ The dropdown next to the legend filters the graph by time window:
 
 ### Design System
 
-| Token | Value | Usage |
-|---|---|---|
-| `--bg` | `#000000` | Page background |
-| `--surface-800` | `#121212` | Card/panel backgrounds |
-| `--border` | `#2a2a2a` | Borders |
-| `--red` | `#ef4444` | Primary accent |
-| `--success` | `#10b981` | Success states |
-| `--font-mono` | `JetBrains Mono` | Code, metrics, IDs |
+| Token           | Value            | Usage                  |
+| --------------- | ---------------- | ---------------------- |
+| `--bg`          | `#000000`        | Page background        |
+| `--surface-800` | `#121212`        | Card/panel backgrounds |
+| `--border`      | `#2a2a2a`        | Borders                |
+| `--red`         | `#ef4444`        | Primary accent         |
+| `--success`     | `#10b981`        | Success states         |
+| `--font-mono`   | `JetBrains Mono` | Code, metrics, IDs     |
 
 ---
 
@@ -493,14 +500,14 @@ The dropdown next to the legend filters the graph by time window:
 
 ### Key Files to Know
 
-| File | Purpose | Lines |
-|---|---|---|
-| `packages/innjest/src/server/routes.ts` | **Main file.** Contains ALL Express routes + HTML dashboard. ~1300 lines. | ~1300 |
-| `packages/innjest/src/server/analytics.ts` | Analytics engine. In-memory `Map<string, APICall>` store. | ~290 |
-| `packages/innjest/src/server/trpc-middleware.ts` | tRPC auto-instrumentation middleware. | ~64 |
-| `packages/innjest/src/client/Dashboard.tsx` | React dashboard (parity with HTML dashboard). | ~340 |
-| `apps/api/src/server.ts` | Where innjest is mounted in the Express app. | ~160 |
-| `packages/trpc/server/trpc.ts` | Where the tRPC analytics middleware is wired. | ~20 |
+| File                                             | Purpose                                                                   | Lines |
+| ------------------------------------------------ | ------------------------------------------------------------------------- | ----- |
+| `packages/innjest/src/server/routes.ts`          | **Main file.** Contains ALL Express routes + HTML dashboard. ~1300 lines. | ~1300 |
+| `packages/innjest/src/server/analytics.ts`       | Analytics engine. In-memory `Map<string, APICall>` store.                 | ~290  |
+| `packages/innjest/src/server/trpc-middleware.ts` | tRPC auto-instrumentation middleware.                                     | ~64   |
+| `packages/innjest/src/client/Dashboard.tsx`      | React dashboard (parity with HTML dashboard).                             | ~340  |
+| `apps/api/src/server.ts`                         | Where innjest is mounted in the Express app.                              | ~160  |
+| `packages/trpc/server/trpc.ts`                   | Where the tRPC analytics middleware is wired.                             | ~20   |
 
 ### Critical Patterns
 
@@ -525,22 +532,27 @@ The dropdown next to the legend filters the graph by time window:
 ### Common Agent Tasks
 
 #### Adding a new KPI card
+
 Edit `getDashboardHtml()` in `routes.ts`. Find the `<!-- KPI SUMMARY BAR -->` section. Add a new `.kpi-card` div following the existing pattern (title with SVG icon + value + subtitle).
 
 #### Adding a new tab
+
 1. Add a `<button class="tab-btn">` in the `<nav class="sub-navbar">` section
 2. Add a `<div id="panel-{name}" style="display: none;">` in `<main>`
 3. Add the tab name to the `switchTab()` function's array
 4. Populate the panel content
 
 #### Modifying the graph
+
 The graph is built in `function renderFunctionsChart()` inside the `<script>` tag. Key variables:
+
 - `numBuckets = 24` — number of time buckets on X axis
 - `height = 540` — SVG canvas height
 - `margin = { left: 55, right: 35, top: 40, bottom: 45 }`
 - Lines are drawn via `generateSmoothPath(pts)` using cubic bezier curves
 
 #### Adding a new REST endpoint
+
 Add a new `router.get()` or `router.post()` in `createAnalyticsRoutes()` at the top of `routes.ts`.
 
 ### Testing Changes
@@ -574,23 +586,30 @@ curl -X POST http://localhost:4000/api/analytics/clear
 ## Troubleshooting
 
 ### Dashboard shows "0" for all metrics
+
 The dashboard fetches data from `/api/analytics/metrics`, `/calls`, and `/endpoints`. If everything shows 0, no API calls have been recorded yet. Hit some endpoints or use the "Ping" button to generate data.
 
 ### Graph is empty (no lines)
+
 This usually means the SVG container has zero width when `renderFunctionsChart()` runs. The code handles this with fallback width detection (`container.clientWidth || getBoundingClientRect().width || 750`). If it persists, check that the Functions tab is visible when data loads.
 
 ### Changes to routes.ts don't appear
+
 `tsx watch` only watches `apps/api/src/`. After editing `packages/innjest/src/server/routes.ts`, you must:
+
 1. Press `Ctrl+C` in the terminal running `pnpm --filter @repo/api dev`
 2. Run `pnpm --filter @repo/api dev` again
 
 ### React Dashboard doesn't load
+
 The React `AnalyticsDashboard` component fetches from `/api/analytics/*`. Ensure:
+
 - The Express server is running
 - CORS allows the frontend origin
 - The analytics routes are mounted at `/api/analytics`
 
 ### Memory usage grows over time
+
 The collector stores up to 10,000 calls in memory (configurable via `maxStoredCalls`). Old calls are automatically evicted when this limit is reached (FIFO). You can also call `analyticsCollector.clearOldData(86400000)` to prune calls older than 24h.
 
 ---

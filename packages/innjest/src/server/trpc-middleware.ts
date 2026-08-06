@@ -1,7 +1,6 @@
-import { TRPCError } from '@trpc/server';
-import { analyticsCollector } from './analytics.js';
-import type { APIMetadata } from '../shared/types.js';
-
+import { TRPCError } from "@trpc/server";
+import { analyticsCollector } from "./analytics.js";
+import type { APIMetadata } from "../shared/types.js";
 
 /**
  * Create a tRPC middleware that automatically tracks API calls
@@ -14,10 +13,10 @@ export function createAnalyticsMiddleware() {
     const ipAddress = ctx?.req?.ip || ctx?.ip || undefined;
 
     const callId = analyticsCollector.startCall(
-      path || 'unknown',
-      (type as any) || 'query',
+      path || "unknown",
+      (type as any) || "query",
       userId,
-      ipAddress
+      ipAddress,
     );
 
     try {
@@ -26,7 +25,7 @@ export function createAnalyticsMiddleware() {
       });
 
       let responseSize = 0;
-      if (result && typeof result === 'object') {
+      if (result && typeof result === "object") {
         try {
           responseSize = JSON.stringify(result).length;
         } catch {
@@ -38,17 +37,13 @@ export function createAnalyticsMiddleware() {
       return result;
     } catch (error) {
       const statusCode =
-        error instanceof TRPCError
-          ? error.code === 'INTERNAL_SERVER_ERROR'
-            ? 500
-            : 400
-          : 500;
+        error instanceof TRPCError ? (error.code === "INTERNAL_SERVER_ERROR" ? 500 : 400) : 500;
 
       analyticsCollector.endCall(
         callId,
         statusCode,
         0,
-        error instanceof Error ? error : new Error(String(error))
+        error instanceof Error ? error : new Error(String(error)),
       );
       throw error;
     }

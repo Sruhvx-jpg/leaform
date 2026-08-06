@@ -49,8 +49,7 @@ export const authRouter = router({
       }
     }),
 
-  getMe: TokenBasedProcedure
-    .meta({ openapi: { method: "GET", path: getPath("/me"), tags: TAGS } })
+  getMe: TokenBasedProcedure.meta({ openapi: { method: "GET", path: getPath("/me"), tags: TAGS } })
     .input(zodUndefinedModel)
     .output(getMeOutputModel)
     .query(async ({ ctx }) => {

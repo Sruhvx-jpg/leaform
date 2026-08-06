@@ -1,1 +1,1 @@
-export { AnalyticsDashboard, AnalyticsDashboard as default } from './Dashboard';
+export { AnalyticsDashboard, AnalyticsDashboard as default } from "./Dashboard";

@@ -1,11 +1,7 @@
 import { pgEnum, pgTable, uuid, varchar, text, jsonb, timestamp } from "drizzle-orm/pg-core";
 import { usersTable } from "../user/user";
 
-export const formStateEnum = pgEnum("form_state", [
-  "drafted",
-  "published",
-  "closed",
-]);
+export const formStateEnum = pgEnum("form_state", ["drafted", "published", "closed"]);
 
 export interface FormThemeConfig {
   backgroundColor?: string;

@@ -3,7 +3,24 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect, useRef } from "react";
-import { User, Mail, Lock, AlertCircle, CheckCircle2, ArrowRight, Pause, Play, ChevronLeft, ChevronRight, Star, Globe, ChevronDown, Check, Eye, EyeOff } from "lucide-react";
+import {
+  User,
+  Mail,
+  Lock,
+  AlertCircle,
+  CheckCircle2,
+  ArrowRight,
+  Pause,
+  Play,
+  ChevronLeft,
+  ChevronRight,
+  Star,
+  Globe,
+  ChevronDown,
+  Check,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { useSignup, useLogin } from "~/hooks";
 
 export default function WelcomePage() {
@@ -102,7 +119,14 @@ export default function WelcomePage() {
 
   // Password strength calculation for Sign Up mode
   const getPasswordStrength = (pass: string) => {
-    if (!pass) return { score: 0, label: "", color: "bg-slate-200", textColor: "text-slate-400", checks: [] };
+    if (!pass)
+      return {
+        score: 0,
+        label: "",
+        color: "bg-slate-200",
+        textColor: "text-slate-400",
+        checks: [],
+      };
 
     const checks = [
       { label: "At least 8 characters", met: pass.length >= 8 },
@@ -116,11 +140,29 @@ export default function WelcomePage() {
     if (score <= 1) {
       return { score: 1, label: "Weak", color: "bg-red-500", textColor: "text-red-500", checks };
     } else if (score === 2) {
-      return { score: 2, label: "Fair", color: "bg-amber-500", textColor: "text-amber-600", checks };
+      return {
+        score: 2,
+        label: "Fair",
+        color: "bg-amber-500",
+        textColor: "text-amber-600",
+        checks,
+      };
     } else if (score === 3) {
-      return { score: 3, label: "Good", color: "bg-emerald-500", textColor: "text-emerald-600", checks };
+      return {
+        score: 3,
+        label: "Good",
+        color: "bg-emerald-500",
+        textColor: "text-emerald-600",
+        checks,
+      };
     } else {
-      return { score: 4, label: "Strong", color: "bg-emerald-600", textColor: "text-emerald-700", checks };
+      return {
+        score: 4,
+        label: "Strong",
+        color: "bg-emerald-600",
+        textColor: "text-emerald-700",
+        checks,
+      };
     }
   };
 
@@ -162,7 +204,11 @@ export default function WelcomePage() {
           setErrorMessage("Please choose a stronger password before continuing");
           return;
         }
-        const res = await signup({ fullName: fullName.trim(), email: cleanEmail, password: cleanPassword });
+        const res = await signup({
+          fullName: fullName.trim(),
+          email: cleanEmail,
+          password: cleanPassword,
+        });
         if (typeof window !== "undefined") {
           localStorage.setItem("user", JSON.stringify(res));
         }
@@ -183,8 +229,12 @@ export default function WelcomePage() {
     } catch (err: unknown) {
       let msg = err instanceof Error ? err.message : "An unexpected error occurred";
       // Clean up template prefixes or raw internal stack traces
-      msg = msg.replace(/UNKNOWN ERROR: \+\+.*?Wait.*?\+\+/gi, "").replace(/UNAUTHORIZED ACCESS: \+\+.*?Wait.*?\+\+/gi, "").trim() || msg;
-      
+      msg =
+        msg
+          .replace(/UNKNOWN ERROR: \+\+.*?Wait.*?\+\+/gi, "")
+          .replace(/UNAUTHORIZED ACCESS: \+\+.*?Wait.*?\+\+/gi, "")
+          .trim() || msg;
+
       if (
         msg.includes("UserService") ||
         msg.includes("Failed query") ||
@@ -238,7 +288,9 @@ export default function WelcomePage() {
                       </h2>
 
                       {/* Inner Pastel Showcase Graphic Canvas */}
-                      <div className={`w-full h-48 sm:h-72 rounded-2xl bg-gradient-to-b ${slide.canvasGradient} relative overflow-hidden p-2.5 sm:p-4 flex items-center justify-center shadow-inner border border-white/40`}>
+                      <div
+                        className={`w-full h-48 sm:h-72 rounded-2xl bg-gradient-to-b ${slide.canvasGradient} relative overflow-hidden p-2.5 sm:p-4 flex items-center justify-center shadow-inner border border-white/40`}
+                      >
                         {/* Floating Badge 1: Brand Name */}
                         <div className="bg-white text-slate-900 text-[8px] sm:text-[11px] font-extrabold tracking-wider px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-xl shadow-md border border-slate-100 absolute top-2.5 sm:top-5 left-2.5 sm:left-5 z-20 flex items-center gap-1">
                           {slide.brandBadge}
@@ -251,13 +303,21 @@ export default function WelcomePage() {
 
                         {/* Floating Color Drop Pills (Teardrops) */}
                         <div className="absolute top-2.5 sm:top-5 right-2.5 sm:right-5 flex items-center gap-1 sm:gap-1.5 z-20">
-                          <div className={`w-2.5 sm:w-4 h-3.5 sm:h-6 rounded-t-full rounded-b-md ${slide.dropColor1} shadow-sm transform -rotate-12`} />
-                          <div className={`w-2.5 sm:w-4 h-3.5 sm:h-6 rounded-t-full rounded-b-md ${slide.dropColor2} shadow-sm transform -rotate-12`} />
-                          <div className={`w-2.5 sm:w-4 h-3.5 sm:h-6 rounded-t-full rounded-b-md ${slide.dropColor3} shadow-sm transform -rotate-12`} />
+                          <div
+                            className={`w-2.5 sm:w-4 h-3.5 sm:h-6 rounded-t-full rounded-b-md ${slide.dropColor1} shadow-sm transform -rotate-12`}
+                          />
+                          <div
+                            className={`w-2.5 sm:w-4 h-3.5 sm:h-6 rounded-t-full rounded-b-md ${slide.dropColor2} shadow-sm transform -rotate-12`}
+                          />
+                          <div
+                            className={`w-2.5 sm:w-4 h-3.5 sm:h-6 rounded-t-full rounded-b-md ${slide.dropColor3} shadow-sm transform -rotate-12`}
+                          />
                         </div>
 
                         {/* Embedded Dark Form Preview Box */}
-                        <div className={`${slide.primaryColor} text-white p-2.5 sm:p-5 rounded-2xl shadow-2xl w-36 sm:w-56 absolute left-2.5 sm:left-5 bottom-2.5 sm:bottom-5 text-left z-20 transition-all duration-500 border border-white/10`}>
+                        <div
+                          className={`${slide.primaryColor} text-white p-2.5 sm:p-5 rounded-2xl shadow-2xl w-36 sm:w-56 absolute left-2.5 sm:left-5 bottom-2.5 sm:bottom-5 text-left z-20 transition-all duration-500 border border-white/10`}
+                        >
                           <div className="text-[10px] sm:text-sm font-serif font-medium mb-1.5 sm:mb-3 tracking-wide text-white/95 truncate">
                             {slide.formTitle}
                           </div>
@@ -275,12 +335,20 @@ export default function WelcomePage() {
                           <div className="absolute right-2 sm:right-6 bottom-2 sm:bottom-3 w-28 sm:w-40 h-36 sm:h-52 opacity-90 pointer-events-none z-10 overflow-hidden flex flex-wrap gap-1.5 transform rotate-[-6deg] scale-80 sm:scale-100 origin-bottom-right">
                             <div className="w-10 sm:w-14 h-18 sm:h-24 bg-gradient-to-b from-[#3a201b] to-[#1f100d] rounded-2xl border border-white/20 shadow-md p-1 flex flex-col justify-between items-center text-[5px] sm:text-[7px] text-amber-100/70">
                               <div className="w-3.5 sm:w-5 h-1 sm:h-2 bg-amber-900/60 rounded-t-sm" />
-                              <div className="text-center font-serif text-[4.5px] sm:text-[6px] leading-tight">GLOSSY<br/>SHAMPOO</div>
+                              <div className="text-center font-serif text-[4.5px] sm:text-[6px] leading-tight">
+                                GLOSSY
+                                <br />
+                                SHAMPOO
+                              </div>
                               <div className="w-5 sm:w-8 h-1 bg-white/20 rounded" />
                             </div>
                             <div className="w-10 sm:w-14 h-18 sm:h-24 bg-gradient-to-b from-[#3a201b] to-[#1f100d] rounded-2xl border border-white/20 shadow-md p-1 flex flex-col justify-between items-center text-[5px] sm:text-[7px] text-amber-100/70">
                               <div className="w-3.5 sm:w-5 h-1 sm:h-2 bg-amber-900/60 rounded-t-sm" />
-                              <div className="text-center font-serif text-[4.5px] sm:text-[6px] leading-tight">GLOSSY<br/>SHAMPOO</div>
+                              <div className="text-center font-serif text-[4.5px] sm:text-[6px] leading-tight">
+                                GLOSSY
+                                <br />
+                                SHAMPOO
+                              </div>
                               <div className="w-5 sm:w-8 h-1 bg-white/20 rounded" />
                             </div>
                           </div>
@@ -329,7 +397,9 @@ export default function WelcomePage() {
             {/* Previous button */}
             <button
               type="button"
-              onClick={() => handleSlideNavigation(activeSlide > 0 ? activeSlide - 1 : slides.length - 1)}
+              onClick={() =>
+                handleSlideNavigation(activeSlide > 0 ? activeSlide - 1 : slides.length - 1)
+              }
               className="text-white/40 hover:text-white transition-colors cursor-pointer p-1"
               aria-label="Previous slide"
             >
@@ -358,9 +428,7 @@ export default function WelcomePage() {
                   type="button"
                   onClick={() => handleSlideNavigation(idx)}
                   className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                    activeSlide === idx
-                      ? "bg-white"
-                      : "bg-white/35 hover:bg-white/60"
+                    activeSlide === idx ? "bg-white" : "bg-white/35 hover:bg-white/60"
                   }`}
                   aria-label={`Go to slide ${idx + 1}`}
                 />
@@ -370,7 +438,9 @@ export default function WelcomePage() {
             {/* Next button */}
             <button
               type="button"
-              onClick={() => handleSlideNavigation(activeSlide < slides.length - 1 ? activeSlide + 1 : 0)}
+              onClick={() =>
+                handleSlideNavigation(activeSlide < slides.length - 1 ? activeSlide + 1 : 0)
+              }
               className="text-white hover:text-white/80 transition-colors cursor-pointer p-1"
               aria-label="Next slide"
             >
@@ -379,7 +449,9 @@ export default function WelcomePage() {
           </div>
         </div>
 
-        <div className="w-full text-center text-[10px] sm:text-xs text-white/40 z-10 mt-4 lg:mt-0">© 2026 LeafForm Inc. All rights reserved.</div>
+        <div className="w-full text-center text-[10px] sm:text-xs text-white/40 z-10 mt-4 lg:mt-0">
+          © 2026 LeafForm Inc. All rights reserved.
+        </div>
       </div>
 
       {/* RIGHT PANEL: Clean White Background Typeform Style Auth Panel */}
@@ -406,7 +478,9 @@ export default function WelcomePage() {
                 priority
               />
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">LeafForm</h2>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+              LeafForm
+            </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1.5 sm:mt-2 max-w-xs leading-relaxed">
               Get better data with conversational forms, surveys, quizzes and more.
             </p>
@@ -491,11 +565,7 @@ export default function WelcomePage() {
                   className="absolute right-3 text-slate-400 hover:text-slate-700 transition-colors p-1 cursor-pointer"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
@@ -513,7 +583,9 @@ export default function WelcomePage() {
                 {/* Score Bar & Label */}
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-500 font-medium">Password Strength:</span>
-                  <span className={`font-bold transition-colors duration-300 ${passwordStrength.textColor}`}>
+                  <span
+                    className={`font-bold transition-colors duration-300 ${passwordStrength.textColor}`}
+                  >
                     {passwordStrength.label}
                   </span>
                 </div>
@@ -576,7 +648,14 @@ export default function WelcomePage() {
               {isLoading ? (
                 <>
                   <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                   </svg>
                   <span>Processing...</span>
@@ -601,4 +680,3 @@ export default function WelcomePage() {
     </main>
   );
 }
-

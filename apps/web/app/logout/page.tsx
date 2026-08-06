@@ -32,7 +32,9 @@ export default function LogoutPage() {
         </div>
         <div>
           <h2 className="text-xl font-bold text-slate-900">Signing Out</h2>
-          <p className="text-sm text-slate-500 mt-1">Clearing session and redirecting to welcome page...</p>
+          <p className="text-sm text-slate-500 mt-1">
+            Clearing session and redirecting to welcome page...
+          </p>
         </div>
       </div>
     </main>

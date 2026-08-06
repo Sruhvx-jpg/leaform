@@ -5,7 +5,17 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { trpc } from "~/trpc/client";
-import { ArrowLeft, User, Mail, Shield, ShieldCheck, ShieldAlert, Calendar, LogOut, CheckCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  User,
+  Mail,
+  Shield,
+  ShieldCheck,
+  ShieldAlert,
+  Calendar,
+  LogOut,
+  CheckCircle,
+} from "lucide-react";
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -60,7 +70,8 @@ export default function UserProfilePage() {
   };
 
   const displayName = userInfo?.fullName || "LeafForm User";
-  const displayEmail = userInfo?.email || (profileId.includes("@") ? profileId : "user@leafform.com");
+  const displayEmail =
+    userInfo?.email || (profileId.includes("@") ? profileId : "user@leafform.com");
   const isVerified = Boolean(userInfo?.emailVerified);
 
   return (

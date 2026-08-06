@@ -1,23 +1,23 @@
-import { Router } from 'express';
-import type { Request, Response } from 'express';
-import { analyticsCollector } from './analytics.js';
+import { Router } from "express";
+import type { Request, Response } from "express";
+import { analyticsCollector } from "./analytics.js";
 
 export function createAnalyticsRoutes(): Router {
   const router = Router();
 
   // GET /api/analytics - Dedicated Event Analytics UI & Detail Viewer
-  router.get('/', (req: Request, res: Response) => {
-    if (req.headers.accept?.includes('application/json') && !req.query.id) {
+  router.get("/", (req: Request, res: Response) => {
+    if (req.headers.accept?.includes("application/json") && !req.query.id) {
       const timeWindowParam = req.query.timeWindow;
       const timeWindow = timeWindowParam ? parseInt(String(timeWindowParam), 10) : 3600000;
       return res.json(analyticsCollector.getAnalytics(timeWindow));
     }
-    res.setHeader('Content-Type', 'text/html');
+    res.setHeader("Content-Type", "text/html");
     res.send(getEventAnalyticsHtml(req.query.id ? String(req.query.id) : undefined));
   });
 
   // GET /api/analytics/metrics
-  router.get('/metrics', (req: Request, res: Response) => {
+  router.get("/metrics", (req: Request, res: Response) => {
     const timeWindowParam = req.query.timeWindow;
     const timeWindow = timeWindowParam ? parseInt(String(timeWindowParam), 10) : 3600000;
     const analytics = analyticsCollector.getAnalytics(timeWindow);
@@ -25,52 +25,48 @@ export function createAnalyticsRoutes(): Router {
   });
 
   // GET /api/analytics/calls
-  router.get('/calls', (req: Request, res: Response) => {
+  router.get("/calls", (req: Request, res: Response) => {
     const endpoint = req.query.endpoint ? String(req.query.endpoint) : undefined;
     const status = req.query.status ? (String(req.query.status) as any) : undefined;
     const search = req.query.search ? String(req.query.search) : undefined;
     const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : 100;
     const offset = req.query.offset ? parseInt(String(req.query.offset), 10) : 0;
 
-    const calls = analyticsCollector.getCalls(
-      { endpoint, status, search },
-      limit,
-      offset
-    );
+    const calls = analyticsCollector.getCalls({ endpoint, status, search }, limit, offset);
     res.json(calls);
   });
 
   // GET /api/analytics/calls/:id - Get specific event details
-  router.get('/calls/:id', (req: Request, res: Response) => {
+  router.get("/calls/:id", (req: Request, res: Response) => {
     const calls = analyticsCollector.getCalls({}, 500, 0);
     const targetCall = calls.find((c) => c.id === req.params.id);
     if (!targetCall) {
-      return res.status(404).json({ error: 'Event not found', id: req.params.id });
+      return res.status(404).json({ error: "Event not found", id: req.params.id });
     }
     res.json(targetCall);
   });
 
   // GET /api/analytics/endpoints
-  router.get('/endpoints', (_req: Request, res: Response) => {
+  router.get("/endpoints", (_req: Request, res: Response) => {
     const endpoints = analyticsCollector.getEndpoints();
     res.json(endpoints);
   });
 
   // POST /api/analytics/clear
-  router.post('/clear', (_req: Request, res: Response) => {
+  router.post("/clear", (_req: Request, res: Response) => {
     analyticsCollector.clearData();
-    res.json({ success: true, message: 'Analytics logs cleared successfully' });
+    res.json({ success: true, message: "Analytics logs cleared successfully" });
   });
 
   // POST /api/analytics/event - Send custom event
-  router.post('/event', (req: Request, res: Response) => {
+  router.post("/event", (req: Request, res: Response) => {
     const { name, payload } = req.body || {};
-    const eventName = name || 'app/custom.event';
+    const eventName = name || "app/custom.event";
     const callId = analyticsCollector.startCall(
       eventName,
-      'mutation',
-      payload?.userId || 'usr_dev',
-      req.ip
+      "mutation",
+      payload?.userId || "usr_dev",
+      req.ip,
     );
     const responseSize = JSON.stringify(payload || {}).length;
     analyticsCollector.endCall(callId, 200, responseSize);
@@ -84,15 +80,10 @@ export function createAnalyticsRoutes(): Router {
   });
 
   // POST /api/analytics/invoke - Invoke function
-  router.post('/invoke', (req: Request, res: Response) => {
+  router.post("/invoke", (req: Request, res: Response) => {
     const { endpoint, payload } = req.body || {};
-    const fnEndpoint = endpoint || 'health.getHealth';
-    const callId = analyticsCollector.startCall(
-      fnEndpoint,
-      'query',
-      'dev_runner',
-      req.ip
-    );
+    const fnEndpoint = endpoint || "health.getHealth";
+    const callId = analyticsCollector.startCall(fnEndpoint, "query", "dev_runner", req.ip);
     const responseSize = JSON.stringify(payload || {}).length;
     analyticsCollector.endCall(callId, 200, responseSize);
 
@@ -105,8 +96,8 @@ export function createAnalyticsRoutes(): Router {
   });
 
   // GET /api/analytics/dashboard
-  router.get('/dashboard', (_req: Request, res: Response) => {
-    res.setHeader('Content-Type', 'text/html');
+  router.get("/dashboard", (_req: Request, res: Response) => {
+    res.setHeader("Content-Type", "text/html");
     res.send(getDashboardHtml());
   });
 
@@ -295,7 +286,7 @@ function getEventAnalyticsHtml(selectedId?: string): string {
 
   <script>
     window.allEvents = [];
-    window.selectedEventId = "${selectedId || ''}";
+    window.selectedEventId = "${selectedId || ""}";
 
     async function loadEvents() {
       try {

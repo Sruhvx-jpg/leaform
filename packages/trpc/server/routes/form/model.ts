@@ -11,10 +11,7 @@ export const formItemModel = z.object({
   updatedAt: z.any().optional(),
 });
 
-export const getUserFormsOutputModel = z.union([
-  z.array(formItemModel),
-  z.literal(0),
-]);
+export const getUserFormsOutputModel = z.union([z.array(formItemModel), z.literal(0)]);
 
 export const fieldTypeMetadataModel = z.object({
   type: z.string(),
@@ -59,7 +56,7 @@ export const saveFormInputModel = z.object({
         })
         .optional(),
       options: z.array(z.string()).optional(),
-    })
+    }),
   ),
 });
 
@@ -99,7 +96,7 @@ export const submitFormResponseInputModel = z.object({
       fieldId: z.string().optional(),
       label: z.string(),
       value: z.any(),
-    })
+    }),
   ),
 });
 

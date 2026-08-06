@@ -1,11 +1,11 @@
-import { nanoid } from 'nanoid';
+import { nanoid } from "nanoid";
 import type {
   APICall,
   APIMetadata,
   AnalyticsSummary,
   EndpointStats,
   FilterOptions,
-} from '../shared/types';
+} from "../shared/types";
 
 function generateId(): string {
   try {
@@ -25,16 +25,16 @@ export class AnalyticsCollector {
    */
   startCall(
     endpoint: string,
-    method: 'query' | 'mutation' | 'subscription' = 'query',
+    method: "query" | "mutation" | "subscription" = "query",
     userId?: string,
-    ipAddress?: string
+    ipAddress?: string,
   ): string {
     const callId = generateId();
     const call: APICall = {
       id: callId,
       endpoint,
       method,
-      status: 'pending',
+      status: "pending",
       startTime: performance.now(),
       requestSize: 0,
       responseSize: 0,
@@ -50,12 +50,7 @@ export class AnalyticsCollector {
   /**
    * Complete an API call
    */
-  endCall(
-    callId: string,
-    statusCode: number,
-    responseSize: number,
-    error?: Error
-  ): void {
+  endCall(callId: string, statusCode: number, responseSize: number, error?: Error): void {
     const call = this.calls.get(callId);
     if (!call) return;
 
@@ -64,7 +59,7 @@ export class AnalyticsCollector {
     call.duration = Math.max(0, endTime - call.startTime);
     call.responseSize = responseSize;
     call.statusCode = statusCode;
-    call.status = error || statusCode >= 400 ? 'error' : 'success';
+    call.status = error || statusCode >= 400 ? "error" : "success";
     if (error) {
       call.error = error.message;
     }
@@ -106,7 +101,7 @@ export class AnalyticsCollector {
       meta = {
         name: call.endpoint,
         endpoint: call.endpoint,
-        method: call.method === 'mutation' ? 'mutation' : 'query',
+        method: call.method === "mutation" ? "mutation" : "query",
         isAuthRequired: false,
         callCount: 0,
         errorCount: 0,
@@ -119,13 +114,13 @@ export class AnalyticsCollector {
     const newCount = currentCount + 1;
     meta.callCount = newCount;
 
-    if (call.status === 'error') {
+    if (call.status === "error") {
       meta.errorCount = (meta.errorCount || 0) + 1;
     }
 
     meta.lastCalled = new Date();
 
-    if (typeof call.duration === 'number') {
+    if (typeof call.duration === "number") {
       const prevAvg = meta.averageResponseTime || 0;
       meta.averageResponseTime = (prevAvg * currentCount + call.duration) / newCount;
     }
@@ -134,11 +129,7 @@ export class AnalyticsCollector {
   /**
    * Get all calls with filtering & pagination
    */
-  getCalls(
-    filters?: FilterOptions,
-    limit: number = 100,
-    offset: number = 0
-  ): APICall[] {
+  getCalls(filters?: FilterOptions, limit: number = 100, offset: number = 0): APICall[] {
     let callsList = Array.from(this.calls.values());
 
     if (filters?.endpoint) {
@@ -154,7 +145,7 @@ export class AnalyticsCollector {
         (c) =>
           c.endpoint.toLowerCase().includes(query) ||
           c.id.toLowerCase().includes(query) ||
-          (c.error && c.error.toLowerCase().includes(query))
+          (c.error && c.error.toLowerCase().includes(query)),
       );
     }
     if (filters?.startDate) {
@@ -184,8 +175,8 @@ export class AnalyticsCollector {
     });
 
     const totalCalls = recentCalls.length;
-    const successfulCalls = recentCalls.filter((c) => c.status === 'success').length;
-    const failedCalls = recentCalls.filter((c) => c.status === 'error').length;
+    const successfulCalls = recentCalls.filter((c) => c.status === "success").length;
+    const failedCalls = recentCalls.filter((c) => c.status === "error").length;
     const totalDuration = recentCalls.reduce((sum, c) => sum + (c.duration || 0), 0);
     const avgResponseTime = totalCalls > 0 ? totalDuration / totalCalls : 0;
     const successRate = totalCalls > 0 ? (successfulCalls / totalCalls) * 100 : 0;
@@ -207,7 +198,7 @@ export class AnalyticsCollector {
 
       const stats = endpointStatsMap.get(call.endpoint)!;
       stats.calls++;
-      if (call.status === 'error') {
+      if (call.status === "error") {
         stats.errors++;
       }
       const dur = call.duration || 0;

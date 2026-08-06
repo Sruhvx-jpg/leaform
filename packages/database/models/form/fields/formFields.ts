@@ -1,12 +1,4 @@
-import {
-  pgTable,
-  uuid,
-  text,
-  boolean,
-  integer,
-  jsonb,
-  timestamp,
-} from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, boolean, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
 import { formsTable } from "../form";
 import { fieldTypeEnum } from "./enums";
 

@@ -13,9 +13,7 @@ export const formSubmissionsTable = pgTable("leaf_form_submissions", {
     .notNull()
     .references(() => formsTable.id, { onDelete: "cascade" }),
   answers: jsonb("answers").$type<FormSubmissionAnswer[]>().notNull(),
-  submittedAt: timestamp("submitted_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
+  submittedAt: timestamp("submitted_at", { withTimezone: true }).defaultNow().notNull(),
   respondentIp: varchar("respondent_ip", { length: 255 }),
 });
 

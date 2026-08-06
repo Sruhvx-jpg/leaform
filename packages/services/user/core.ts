@@ -6,21 +6,11 @@
 import { eq } from "drizzle-orm";
 
 // in house modules
-import db, {
-  usersTable,
-  refreshTokensTable,
-  InsertUser,
-  InsertRefreshToken,
-} from "@repo/database";
+import db, { usersTable, refreshTokensTable, InsertUser, InsertRefreshToken } from "@repo/database";
 import { apiErr, hashIT, comparePass, generateAccTok, generateRefTok } from "@repo/utils";
 
 // current working directory files
-import {
-  SignupUserInput,
-  SignupUserInputType,
-  LoginUserInput,
-  LoginUserInputType,
-} from "./model";
+import { SignupUserInput, SignupUserInputType, LoginUserInput, LoginUserInputType } from "./model";
 
 class UserService {
   // ========================================== private methods ====================================================
@@ -32,22 +22,19 @@ class UserService {
       return user;
     } catch (error) {
       throw new Error(
-        `getUserByEmail failed: ${error instanceof Error ? error.message : String(error)}`);
+        `getUserByEmail failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   private async findUserById(id: string) {
     try {
-      const [user] = await db
-        .select()
-        .from(usersTable)
-        .where(eq(usersTable.id, id))
-        .limit(1);
+      const [user] = await db.select().from(usersTable).where(eq(usersTable.id, id)).limit(1);
 
       return user || null;
     } catch (error) {
       throw new Error(
-        `findUserById failed: ${error instanceof Error ? error.message : String(error)}`
+        `findUserById failed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -61,7 +48,7 @@ class UserService {
       return user;
     } catch (error) {
       throw new Error(
-        `createUserInDB failed: ${error instanceof Error ? error.message : String(error)}`
+        `createUserInDB failed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -80,7 +67,7 @@ class UserService {
       await db.insert(refreshTokensTable).values(tokenData);
     } catch (error) {
       throw new Error(
-        `storeRefreshTokenInDB failed: ${error instanceof Error ? error.message : String(error)}`
+        `storeRefreshTokenInDB failed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -99,7 +86,7 @@ class UserService {
       ];
     } catch (error) {
       throw new Error(
-        `UserService.getAuthenticationMethods error: ${error instanceof Error ? error.message : String(error)}`
+        `UserService.getAuthenticationMethods error: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }

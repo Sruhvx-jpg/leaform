@@ -10,7 +10,7 @@ export const getUserFormsOutput = z.union([
       ownerId: z.string(),
       createdAt: z.date().nullable(),
       updatedAt: z.date().nullable(),
-    })
+    }),
   ),
   z.literal(0),
 ]);

@@ -28,7 +28,7 @@ export default function PublicSubmitFormPage() {
 
   const { data, isLoading, isError, error } = trpc.form.getPublicForm.useQuery(
     { id: formId },
-    { enabled: !!formId, retry: false }
+    { enabled: !!formId, retry: false },
   );
 
   const submitMutation = trpc.form.submitFormResponse.useMutation();
@@ -148,7 +148,8 @@ export default function PublicSubmitFormPage() {
           <div className="space-y-2">
             <h2 className="text-3xl font-black tracking-tight">Response Submitted!</h2>
             <p className="text-xs opacity-80 leading-relaxed">
-              Thank you for completing <span className="font-bold">{data.form.title}</span>. Your answers have been safely recorded.
+              Thank you for completing <span className="font-bold">{data.form.title}</span>. Your
+              answers have been safely recorded.
             </p>
           </div>
 
@@ -190,9 +191,7 @@ export default function PublicSubmitFormPage() {
       >
         {/* Header Title */}
         <div className="text-center space-y-1.5 pb-4 border-b border-white/10">
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-            {data.form.title}
-          </h1>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">{data.form.title}</h1>
           {data.form.description && (
             <p className="text-xs opacity-70 leading-relaxed max-w-md mx-auto">
               {data.form.description}
@@ -216,9 +215,7 @@ export default function PublicSubmitFormPage() {
         {/* Fields List */}
         <div className="space-y-6 min-h-[160px]">
           {currentPageFields.length === 0 ? (
-            <p className="text-xs opacity-60 text-center py-6">
-              No questions on this page.
-            </p>
+            <p className="text-xs opacity-60 text-center py-6">No questions on this page.</p>
           ) : (
             currentPageFields.map((field: any, idx: number) => {
               const val = answers[field.id] || "";
@@ -232,15 +229,11 @@ export default function PublicSubmitFormPage() {
                 >
                   <label className="block text-xs sm:text-sm font-bold tracking-wide">
                     {field.label || `Question ${idx + 1}`}
-                    {isReq && (
-                      <span className="text-red-400 font-bold ml-1">*</span>
-                    )}
+                    {isReq && <span className="text-red-400 font-bold ml-1">*</span>}
                   </label>
 
                   {field.description && (
-                    <p className="text-[11px] opacity-60 leading-snug">
-                      {field.description}
-                    </p>
+                    <p className="text-[11px] opacity-60 leading-snug">{field.description}</p>
                   )}
 
                   {/* Render Input by Type */}
@@ -275,7 +268,7 @@ export default function PublicSubmitFormPage() {
                               )}
                             </button>
                           );
-                        }
+                        },
                       )}
                     </div>
                   ) : fType === "rating" || fType === "nps" || fType === "opinion_scale" ? (
@@ -301,14 +294,14 @@ export default function PublicSubmitFormPage() {
                         fType === "email"
                           ? "email"
                           : fType === "number"
-                          ? "number"
-                          : fType === "phone_number" || fType === "phone"
-                          ? "tel"
-                          : fType === "url"
-                          ? "url"
-                          : fType === "date"
-                          ? "date"
-                          : "text"
+                            ? "number"
+                            : fType === "phone_number" || fType === "phone"
+                              ? "tel"
+                              : fType === "url"
+                                ? "url"
+                                : fType === "date"
+                                  ? "date"
+                                  : "text"
                       }
                       value={val}
                       required={isReq}

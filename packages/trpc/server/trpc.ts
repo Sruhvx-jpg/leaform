@@ -8,17 +8,12 @@ import { getAuthToken } from "./utils/cookie";
 import { createAnalyticsMiddleware } from "@repo/innjest/server";
 
 //++++++++++++ This file has middle integrateed for procedures +++++++++++++++
-// you can add the middleware to procedure using the ".use()" 
+// you can add the middleware to procedure using the ".use()"
 
-export const tRPCContext = initTRPC
-  .meta<OpenApiMeta>()
-  .context<typeof createContext>()
-  .create({});
-
+export const tRPCContext = initTRPC.meta<OpenApiMeta>().context<typeof createContext>().create({});
 
 // router
 export const router = tRPCContext.router;
-
 
 // middlewares
 const analyticsMiddleware = tRPCContext.middleware(createAnalyticsMiddleware());
@@ -70,9 +65,10 @@ const verifyToken = tRPCContext.middleware(async ({ ctx, next }) => {
     console.error("[AUTH VERIFY ERROR]:", err?.name, err?.message);
     throw new TRPCError({
       code: "UNAUTHORIZED",
-      message: err?.name === "TokenExpiredError"
-        ? "Access token expired. Please log in again."
-        : "Invalid access token",
+      message:
+        err?.name === "TokenExpiredError"
+          ? "Access token expired. Please log in again."
+          : "Invalid access token",
     });
   }
 });
@@ -80,4 +76,3 @@ const verifyToken = tRPCContext.middleware(async ({ ctx, next }) => {
 // procedures
 export const TokenBasedProcedure = tRPCContext.procedure.use(verifyToken).use(analyticsMiddleware);
 export const publicProcedure = tRPCContext.procedure.use(analyticsMiddleware);
-

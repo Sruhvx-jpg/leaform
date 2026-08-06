@@ -1,8 +1,8 @@
 export interface APICall {
   id: string;
   endpoint: string;
-  method: 'query' | 'mutation' | 'subscription';
-  status: 'success' | 'error' | 'pending';
+  method: "query" | "mutation" | "subscription";
+  status: "success" | "error" | "pending";
   startTime: number;
   endTime?: number;
   duration?: number; // milliseconds
@@ -19,14 +19,14 @@ export interface RateLimitConfig {
   enabled: boolean;
   requests: number;
   windowMs: number; // milliseconds
-  type: 'IP' | 'USER' | 'GLOBAL';
+  type: "IP" | "USER" | "GLOBAL";
 }
 
 export interface APIMetadata {
   name: string;
   description?: string;
   endpoint: string;
-  method: 'query' | 'mutation';
+  method: "query" | "mutation";
   isAuthRequired: boolean;
   rateLimit?: RateLimitConfig;
   tags?: string[];
@@ -56,7 +56,7 @@ export interface AnalyticsSummary {
 
 export interface FilterOptions {
   endpoint?: string;
-  status?: 'success' | 'error' | 'pending';
+  status?: "success" | "error" | "pending";
   startDate?: Date | string;
   endDate?: Date | string;
   search?: string;
@@ -75,7 +75,7 @@ export interface PerformanceChart {
   data: Array<{
     time: string;
     duration: number;
-    status: 'success' | 'error';
+    status: "success" | "error";
   }>;
 }
 

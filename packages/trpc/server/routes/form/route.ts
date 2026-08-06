@@ -19,8 +19,9 @@ const TAGS = ["Forms"];
 const getPath = generatePath("/forms");
 
 export const formRouter = router({
-  getUserForms: TokenBasedProcedure
-    .meta({ openapi: { method: "GET", path: getPath("/user-forms"), tags: TAGS } })
+  getUserForms: TokenBasedProcedure.meta({
+    openapi: { method: "GET", path: getPath("/user-forms"), tags: TAGS },
+  })
     .input(zodUndefinedModel)
     .output(getUserFormsOutputModel)
     .query(async ({ ctx }) => {
@@ -32,8 +33,9 @@ export const formRouter = router({
       }
     }),
 
-  saveForm: TokenBasedProcedure
-    .meta({ openapi: { method: "POST", path: getPath("/save"), tags: TAGS } })
+  saveForm: TokenBasedProcedure.meta({
+    openapi: { method: "POST", path: getPath("/save"), tags: TAGS },
+  })
     .input(saveFormInputModel)
     .output(saveFormOutputModel)
     .mutation(async ({ ctx, input }) => {
@@ -61,8 +63,9 @@ export const formRouter = router({
       }
     }),
 
-  deleteForm: TokenBasedProcedure
-    .meta({ openapi: { method: "POST", path: getPath("/delete"), tags: TAGS } })
+  deleteForm: TokenBasedProcedure.meta({
+    openapi: { method: "POST", path: getPath("/delete"), tags: TAGS },
+  })
     .input(deleteFormInputModel)
     .output(deleteFormOutputModel)
     .mutation(async ({ ctx, input }) => {
@@ -93,15 +96,10 @@ export const formRouter = router({
     .output(submitFormResponseOutputModel)
     .mutation(async ({ ctx, input }) => {
       try {
-        const res = await formService.submitFormResponse(
-          input.formId,
-          input.answers,
-          ctx.req.ip
-        );
+        const res = await formService.submitFormResponse(input.formId, input.answers, ctx.req.ip);
         return { success: true, id: res?.id ?? undefined };
       } catch (error) {
         throw error;
       }
     }),
 });
-

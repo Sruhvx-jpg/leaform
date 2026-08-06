@@ -28,12 +28,10 @@ export default function GetStartedPage() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       try {
-        const storedUser =
-          localStorage.getItem("user") || localStorage.getItem("userprofile");
+        const storedUser = localStorage.getItem("user") || localStorage.getItem("userprofile");
         if (storedUser) {
           const parsed = JSON.parse(storedUser);
-          const id =
-            parsed?.id || parsed?.userId || parsed?.sub || parsed?.email;
+          const id = parsed?.id || parsed?.userId || parsed?.sub || parsed?.email;
           if (id) {
             setUserId(String(id));
           }
@@ -212,14 +210,10 @@ export default function GetStartedPage() {
             {showNotifications && (
               <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-lg p-4 z-50">
                 <div className="flex items-center justify-between pb-2 border-b border-gray-100 mb-3">
-                  <h4 className="font-semibold text-sm text-slate-900">
-                    Notifications
-                  </h4>
+                  <h4 className="font-semibold text-sm text-slate-900">Notifications</h4>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <p className="text-xs text-slate-500 text-center py-4">
-                    No new notifications
-                  </p>
+                  <p className="text-xs text-slate-500 text-center py-4">No new notifications</p>
                 </div>
               </div>
             )}
@@ -246,6 +240,3 @@ export default function GetStartedPage() {
     </main>
   );
 }
-
-
-

@@ -63,14 +63,22 @@ import { trpc } from "~/trpc/client";
 
 export const AVAILABLE_FONTS = [
   // Pixel & Retro Gaming Fonts
-  { name: "Press Start 2P (Pixel)", value: "Press Start 2P", family: "'Press Start 2P', monospace" },
+  {
+    name: "Press Start 2P (Pixel)",
+    value: "Press Start 2P",
+    family: "'Press Start 2P', monospace",
+  },
   { name: "VT323 (Retro Terminal)", value: "VT323", family: "'VT323', monospace" },
   { name: "Silkscreen (Pixel)", value: "Silkscreen", family: "'Silkscreen', monospace" },
 
   // Elegant Serif & Luxury
   { name: "Playfair Display", value: "Playfair Display", family: "'Playfair Display', serif" },
   { name: "Cinzel Decorative", value: "Cinzel Decorative", family: "'Cinzel Decorative', serif" },
-  { name: "Cormorant Garamond", value: "Cormorant Garamond", family: "'Cormorant Garamond', serif" },
+  {
+    name: "Cormorant Garamond",
+    value: "Cormorant Garamond",
+    family: "'Cormorant Garamond', serif",
+  },
   { name: "EB Garamond", value: "EB Garamond", family: "'EB Garamond', serif" },
   { name: "Merriweather", value: "Merriweather", family: "'Merriweather', serif" },
   { name: "Lora", value: "Lora", family: "'Lora', serif" },
@@ -111,9 +119,7 @@ export const SUPPORTED_LANGUAGES = [
 
 export function parseFontFamily(fontName?: string): string {
   if (!fontName) return "var(--font-inter), 'Inter', sans-serif";
-  const found = AVAILABLE_FONTS.find(
-    (f) => f.value.toLowerCase() === fontName.toLowerCase()
-  );
+  const found = AVAILABLE_FONTS.find((f) => f.value.toLowerCase() === fontName.toLowerCase());
   return found ? found.family : fontName;
 }
 
@@ -245,7 +251,11 @@ export function ColorRingPicker({
   // Convert Hex to HSL for the Hue ring calculation
   const hexToHsl = (hex: string) => {
     let c = (hex || "#0d5c41").replace("#", "");
-    if (c.length === 3) c = c.split("").map((x) => x + x).join("");
+    if (c.length === 3)
+      c = c
+        .split("")
+        .map((x) => x + x)
+        .join("");
     const num = parseInt(c, 16);
     if (isNaN(num)) return { h: 160, s: 75, l: 20 };
     const r = ((num >> 16) & 255) / 255;
@@ -504,14 +514,9 @@ function TypeformFieldRenderer({
 }) {
   const [value, setValue] = useState<any>("");
 
-  const cardBg =
-    field.style?.backgroundColor ||
-    formTheme?.cardBackgroundColor ||
-    "#ffffff";
-  const textColor =
-    field.style?.textColor || formTheme?.textColor || "#0f172a";
-  const accentColor =
-    field.style?.accentColor || formTheme?.accentColor || "#0d5c41";
+  const cardBg = field.style?.backgroundColor || formTheme?.cardBackgroundColor || "#ffffff";
+  const textColor = field.style?.textColor || formTheme?.textColor || "#0f172a";
+  const accentColor = field.style?.accentColor || formTheme?.accentColor || "#0d5c41";
 
   const fontStyle = {
     fontFamily: parseFontFamily(field.font),
@@ -520,12 +525,7 @@ function TypeformFieldRenderer({
     borderColor: `${accentColor}35`,
   };
   const letterBadges = ["A", "B", "C", "D", "E", "F"];
-  const defaultChoices = field.options || [
-    "Option 1",
-    "Option 2",
-    "Option 3",
-    "Option 4",
-  ];
+  const defaultChoices = field.options || ["Option 1", "Option 2", "Option 3", "Option 4"];
 
   return (
     <div
@@ -545,9 +545,7 @@ function TypeformFieldRenderer({
               style={{ color: textColor }}
             >
               {field.label}{" "}
-              {field.required && (
-                <span className="text-red-500 font-bold ml-0.5">*</span>
-              )}
+              {field.required && <span className="text-red-500 font-bold ml-0.5">*</span>}
             </h3>
             {field.description && (
               <p className="text-xs text-slate-500 font-normal mt-1 leading-relaxed">
@@ -564,9 +562,7 @@ function TypeformFieldRenderer({
       </div>
 
       {/* Typeform Specific Field Inputs */}
-      {["multiple_choice", "checkboxes", "dropdown", "picture_choice"].includes(
-        field.type
-      ) ? (
+      {["multiple_choice", "checkboxes", "dropdown", "picture_choice"].includes(field.type) ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
           {defaultChoices.map((choice, i) => {
             const letter = letterBadges[i % letterBadges.length];
@@ -639,9 +635,7 @@ function TypeformFieldRenderer({
               >
                 <Star
                   className={`w-7 h-7 transition-colors ${
-                    active
-                      ? "text-amber-400 fill-amber-400"
-                      : "text-slate-300 hover:text-amber-300"
+                    active ? "text-amber-400 fill-amber-400" : "text-slate-300 hover:text-amber-300"
                   }`}
                 />
               </button>
@@ -679,10 +673,10 @@ function TypeformFieldRenderer({
               field.type === "email"
                 ? "email"
                 : field.type === "number"
-                ? "number"
-                : field.type === "date"
-                ? "date"
-                : "text"
+                  ? "number"
+                  : field.type === "date"
+                    ? "date"
+                    : "text"
             }
             value={value}
             onChange={(e) => setValue(e.target.value)}
@@ -718,7 +712,7 @@ function BuildFormContent() {
 
   const { data: existingForm } = trpc.form.getPublicForm.useQuery(
     { id: existingFormId },
-    { enabled: !!existingFormId, retry: false }
+    { enabled: !!existingFormId, retry: false },
   );
 
   const [formTitle, setFormTitle] = useState("Untitled Form");
@@ -776,7 +770,7 @@ function BuildFormContent() {
             style: f.style,
             type: f.type,
             description: f.description,
-          }))
+          })),
         );
       }
     }
@@ -800,7 +794,7 @@ function BuildFormContent() {
 
   const handleSaveFormDraft = async (
     targetState: "drafted" | "published" | "closed" = "drafted",
-    exitAfterSave: boolean = true
+    exitAfterSave: boolean = true,
   ) => {
     try {
       setIsSavingDraft(true);
@@ -815,7 +809,7 @@ function BuildFormContent() {
           style: field.style,
           options: field.options,
           orderIndex: pIdx * 100 + fIdx,
-        }))
+        })),
       );
 
       const res = await saveFormMutation.mutateAsync({
@@ -835,9 +829,7 @@ function BuildFormContent() {
         utils.form.getUserForms.invalidate();
       }
 
-      setSaveSuccessMessage(
-        `Form successfully saved to database as ${targetState.toUpperCase()}!`
-      );
+      setSaveSuccessMessage(`Form successfully saved to database as ${targetState.toUpperCase()}!`);
       setTimeout(() => setSaveSuccessMessage(null), 3000);
 
       setIsExitModalOpen(false);
@@ -847,7 +839,7 @@ function BuildFormContent() {
     } catch (err: any) {
       console.error("Error saving form draft:", err);
       setSaveSuccessMessage(
-        err?.message || "Error saving form to database. Please check your login session."
+        err?.message || "Error saving form to database. Please check your login session.",
       );
       setTimeout(() => setSaveSuccessMessage(null), 4000);
     } finally {
@@ -876,7 +868,7 @@ function BuildFormContent() {
         acc[item.category]!.push(item);
         return acc;
       },
-      {} as Record<string, typeof activeFieldTypes>
+      {} as Record<string, typeof activeFieldTypes>,
     );
   }, [activeFieldTypes]);
 
@@ -955,10 +947,7 @@ function BuildFormContent() {
         };
       });
 
-      const lastFieldY =
-        fieldNodes.length > 0
-          ? Math.max(...fieldNodes.map((n) => n.y))
-          : 100;
+      const lastFieldY = fieldNodes.length > 0 ? Math.max(...fieldNodes.map((n) => n.y)) : 100;
 
       const endNode: CanvasNode = {
         id: "node-end",
@@ -1015,80 +1004,66 @@ function BuildFormContent() {
         return updated;
       });
     },
-    [activePageIndex]
+    [activePageIndex],
   );
 
   const handleUpdateFieldLabel = useCallback(
     (fieldId: string, newLabel: string) => {
-      setNodes((prev) =>
-        prev.map((n) => (n.id === fieldId ? { ...n, label: newLabel } : n))
-      );
+      setNodes((prev) => prev.map((n) => (n.id === fieldId ? { ...n, label: newLabel } : n)));
       setPages((prevPages) => {
         const updated = [...prevPages];
         const page = updated[activePageIndex];
         if (page) {
           updated[activePageIndex] = {
             ...page,
-            fields: page.fields.map((f) =>
-              f.id === fieldId ? { ...f, label: newLabel } : f
-            ),
+            fields: page.fields.map((f) => (f.id === fieldId ? { ...f, label: newLabel } : f)),
           };
         }
         return updated;
       });
     },
-    [activePageIndex]
+    [activePageIndex],
   );
 
   const handleUpdateFieldFont = useCallback(
     (fieldId: string, newFont: string) => {
-      setNodes((prev) =>
-        prev.map((n) => (n.id === fieldId ? { ...n, font: newFont } : n))
-      );
+      setNodes((prev) => prev.map((n) => (n.id === fieldId ? { ...n, font: newFont } : n)));
       setPages((prevPages) => {
         const updated = [...prevPages];
         const page = updated[activePageIndex];
         if (page) {
           updated[activePageIndex] = {
             ...page,
-            fields: page.fields.map((f) =>
-              f.id === fieldId ? { ...f, font: newFont } : f
-            ),
+            fields: page.fields.map((f) => (f.id === fieldId ? { ...f, font: newFont } : f)),
           };
         }
         return updated;
       });
     },
-    [activePageIndex]
+    [activePageIndex],
   );
 
   const handleUpdateFieldDescription = useCallback(
     (fieldId: string, newDesc: string) => {
-      setNodes((prev) =>
-        prev.map((n) => (n.id === fieldId ? { ...n, description: newDesc } : n))
-      );
+      setNodes((prev) => prev.map((n) => (n.id === fieldId ? { ...n, description: newDesc } : n)));
       setPages((prevPages) => {
         const updated = [...prevPages];
         const page = updated[activePageIndex];
         if (page) {
           updated[activePageIndex] = {
             ...page,
-            fields: page.fields.map((f) =>
-              f.id === fieldId ? { ...f, description: newDesc } : f
-            ),
+            fields: page.fields.map((f) => (f.id === fieldId ? { ...f, description: newDesc } : f)),
           };
         }
         return updated;
       });
     },
-    [activePageIndex]
+    [activePageIndex],
   );
 
   const handleToggleFieldRequired = useCallback(
     (fieldId: string) => {
-      setNodes((prev) =>
-        prev.map((n) => (n.id === fieldId ? { ...n, required: !n.required } : n))
-      );
+      setNodes((prev) => prev.map((n) => (n.id === fieldId ? { ...n, required: !n.required } : n)));
       setPages((prevPages) => {
         const updated = [...prevPages];
         const page = updated[activePageIndex];
@@ -1096,24 +1071,20 @@ function BuildFormContent() {
           updated[activePageIndex] = {
             ...page,
             fields: page.fields.map((f) =>
-              f.id === fieldId ? { ...f, required: !f.required } : f
+              f.id === fieldId ? { ...f, required: !f.required } : f,
             ),
           };
         }
         return updated;
       });
     },
-    [activePageIndex]
+    [activePageIndex],
   );
 
   const handleUpdateFieldStyle = useCallback(
     (fieldId: string, styleUpdate: Partial<FieldStyle>) => {
       setNodes((prev) =>
-        prev.map((n) =>
-          n.id === fieldId
-            ? { ...n, style: { ...n.style, ...styleUpdate } }
-            : n
-        )
+        prev.map((n) => (n.id === fieldId ? { ...n, style: { ...n.style, ...styleUpdate } } : n)),
       );
       setPages((prevPages) => {
         const updated = [...prevPages];
@@ -1122,16 +1093,14 @@ function BuildFormContent() {
           updated[activePageIndex] = {
             ...page,
             fields: page.fields.map((f) =>
-              f.id === fieldId
-                ? { ...f, style: { ...f.style, ...styleUpdate } }
-                : f
+              f.id === fieldId ? { ...f, style: { ...f.style, ...styleUpdate } } : f,
             ),
           };
         }
         return updated;
       });
     },
-    [activePageIndex]
+    [activePageIndex],
   );
 
   const handleUpdateFieldPlaceholder = useCallback(
@@ -1143,14 +1112,14 @@ function BuildFormContent() {
           updated[activePageIndex] = {
             ...page,
             fields: page.fields.map((f) =>
-              f.id === fieldId ? { ...f, placeholder: newPlaceholder } : f
+              f.id === fieldId ? { ...f, placeholder: newPlaceholder } : f,
             ),
           };
         }
         return updated;
       });
     },
-    [activePageIndex]
+    [activePageIndex],
   );
 
   const handleUpdateFieldOptions = useCallback(
@@ -1161,15 +1130,13 @@ function BuildFormContent() {
         if (page) {
           updated[activePageIndex] = {
             ...page,
-            fields: page.fields.map((f) =>
-              f.id === fieldId ? { ...f, options: newOptions } : f
-            ),
+            fields: page.fields.map((f) => (f.id === fieldId ? { ...f, options: newOptions } : f)),
           };
         }
         return updated;
       });
     },
-    [activePageIndex]
+    [activePageIndex],
   );
 
   const handleAddFieldToActivePage = useCallback(
@@ -1193,7 +1160,7 @@ function BuildFormContent() {
       };
       setPages(updatedPages);
     },
-    [pages, activePageIndex]
+    [pages, activePageIndex],
   );
 
   // HTML5 Drag & Drop handlers for palette → canvas
@@ -1203,7 +1170,7 @@ function BuildFormContent() {
       e.dataTransfer.setData("application/leafform-field-name", fieldName);
       e.dataTransfer.effectAllowed = "copy";
     },
-    []
+    [],
   );
 
   const handleCanvasDragOver = useCallback((e: React.DragEvent) => {
@@ -1230,7 +1197,7 @@ function BuildFormContent() {
 
       handleAddFieldToActivePage(fieldType, fieldName);
     },
-    [handleAddFieldToActivePage]
+    [handleAddFieldToActivePage],
   );
 
   const handleMouseDown = (e: React.MouseEvent, id: string) => {
@@ -1250,9 +1217,7 @@ function BuildFormContent() {
     const scale = zoom / 100;
     const newX = Math.max(10, (e.clientX - dragOffset.current.x * scale) / scale);
     const newY = Math.max(10, (e.clientY - dragOffset.current.y * scale) / scale);
-    setNodes((prev) =>
-      prev.map((n) => (n.id === draggingId ? { ...n, x: newX, y: newY } : n))
-    );
+    setNodes((prev) => prev.map((n) => (n.id === draggingId ? { ...n, x: newX, y: newY } : n)));
   };
 
   const handleMouseUp = () => {
@@ -1455,9 +1420,7 @@ function BuildFormContent() {
               <span>Form Background</span>
               <ColorRingPicker
                 color={formTheme.backgroundColor}
-                onChange={(c) =>
-                  setFormTheme({ ...formTheme, backgroundColor: c })
-                }
+                onChange={(c) => setFormTheme({ ...formTheme, backgroundColor: c })}
               />
             </div>
 
@@ -1466,9 +1429,7 @@ function BuildFormContent() {
               <span>Card Background</span>
               <ColorRingPicker
                 color={formTheme.cardBackgroundColor}
-                onChange={(c) =>
-                  setFormTheme({ ...formTheme, cardBackgroundColor: c })
-                }
+                onChange={(c) => setFormTheme({ ...formTheme, cardBackgroundColor: c })}
               />
             </div>
 
@@ -1498,9 +1459,7 @@ function BuildFormContent() {
               </div>
               <select
                 value={formTheme.language || "en"}
-                onChange={(e) =>
-                  setFormTheme({ ...formTheme, language: e.target.value })
-                }
+                onChange={(e) => setFormTheme({ ...formTheme, language: e.target.value })}
                 className="px-2 py-1 text-xs font-bold rounded-lg border border-slate-200 bg-slate-50 text-slate-800 focus:bg-white focus:outline-none cursor-pointer"
               >
                 {SUPPORTED_LANGUAGES.map((lang) => (
@@ -1562,9 +1521,7 @@ function BuildFormContent() {
                 <span>Add Page</span>
               </button>
             ) : (
-              <span className="text-[10px] font-semibold text-slate-400 px-1.5">
-                (5 Max)
-              </span>
+              <span className="text-[10px] font-semibold text-slate-400 px-1.5">(5 Max)</span>
             )}
           </div>
 
@@ -1599,41 +1556,32 @@ function BuildFormContent() {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  {Object.entries(groupedFieldTypes).map(
-                    ([category, items]) => (
-                      <div key={category} className="flex flex-col gap-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1 mb-0.5">
-                          {category}
-                        </span>
-                        {items!.map((item) => {
-                          const IconComp = resolveIcon(item.icon);
-                          return (
-                            <div
-                              key={item.type}
-                              draggable
-                              onDragStart={(e) =>
-                                handleDragStart(e, item.type, item.name)
-                              }
-                              onClick={() =>
-                                handleAddFieldToActivePage(
-                                  item.type,
-                                  item.name
-                                )
-                              }
-                              className="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 border border-slate-100 transition-all flex items-center justify-between text-slate-700 hover:text-[#0d5c41] cursor-grab active:cursor-grabbing group text-xs font-semibold select-none"
-                            >
-                              <div className="flex items-center gap-2">
-                                <GripVertical className="w-3 h-3 text-slate-300 group-hover:text-slate-400 shrink-0" />
-                                <IconComp className="w-3.5 h-3.5 text-slate-500 group-hover:text-[#0d5c41] shrink-0" />
-                                <span>{item.name}</span>
-                              </div>
-                              <Plus className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                  {Object.entries(groupedFieldTypes).map(([category, items]) => (
+                    <div key={category} className="flex flex-col gap-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1 mb-0.5">
+                        {category}
+                      </span>
+                      {items!.map((item) => {
+                        const IconComp = resolveIcon(item.icon);
+                        return (
+                          <div
+                            key={item.type}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, item.type, item.name)}
+                            onClick={() => handleAddFieldToActivePage(item.type, item.name)}
+                            className="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 border border-slate-100 transition-all flex items-center justify-between text-slate-700 hover:text-[#0d5c41] cursor-grab active:cursor-grabbing group text-xs font-semibold select-none"
+                          >
+                            <div className="flex items-center gap-2">
+                              <GripVertical className="w-3 h-3 text-slate-300 group-hover:text-slate-400 shrink-0" />
+                              <IconComp className="w-3.5 h-3.5 text-slate-500 group-hover:text-[#0d5c41] shrink-0" />
+                              <span>{item.name}</span>
                             </div>
-                          );
-                        })}
-                      </div>
-                    )
-                  )}
+                            <Plus className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -1675,9 +1623,7 @@ function BuildFormContent() {
 
             {/* Draggable Canvas Nodes */}
             {nodes.map((node) => {
-              const activeField = pages[activePageIndex]?.fields.find(
-                (f) => f.id === node.id
-              );
+              const activeField = pages[activePageIndex]?.fields.find((f) => f.id === node.id);
 
               return (
                 <div
@@ -1687,29 +1633,28 @@ function BuildFormContent() {
                     left: `${node.x}px`,
                     top: `${node.y}px`,
                     backgroundColor:
-                      node.style?.backgroundColor ||
-                      formTheme.cardBackgroundColor ||
-                      "#ffffff",
+                      node.style?.backgroundColor || formTheme.cardBackgroundColor || "#ffffff",
                     color: node.style?.textColor || formTheme.textColor || "#0f172a",
                   }}
                   className={`absolute w-[600px] sm:w-[640px] p-6 sm:p-7 rounded-[2rem] backdrop-blur-md shadow-2xl border transition-all duration-200 cursor-grab active:cursor-grabbing z-10 flex flex-col gap-4 select-none ${
                     node.type === "start"
                       ? "border-emerald-500/60 ring-2 ring-emerald-500/10"
                       : node.type === "end"
-                      ? "border-slate-300"
-                      : "border-emerald-700/30 hover:border-emerald-500/60 hover:shadow-2xl"
+                        ? "border-slate-300"
+                        : "border-emerald-700/30 hover:border-emerald-500/60 hover:shadow-2xl"
                   }`}
                 >
                   {node.type === "start" || node.type === "end" ? (
                     <div className="flex items-center gap-2.5">
                       <div
                         className={`w-3 h-3 rounded-full shrink-0 ${
-                          node.type === "start"
-                            ? "bg-emerald-500 animate-pulse"
-                            : "bg-slate-700"
+                          node.type === "start" ? "bg-emerald-500 animate-pulse" : "bg-slate-700"
                         }`}
                       />
-                      <span className="font-bold text-sm truncate" style={{ color: formTheme.textColor || "#0f172a" }}>
+                      <span
+                        className="font-bold text-sm truncate"
+                        style={{ color: formTheme.textColor || "#0f172a" }}
+                      >
                         {node.label}
                       </span>
                     </div>
@@ -1742,14 +1687,8 @@ function BuildFormContent() {
 
                           {/* Card Text Color Ring Picker */}
                           <ColorRingPicker
-                            color={
-                              node.style?.textColor ||
-                              formTheme.textColor ||
-                              "#0f172a"
-                            }
-                            onChange={(c) =>
-                              handleUpdateFieldStyle(node.id, { textColor: c })
-                            }
+                            color={node.style?.textColor || formTheme.textColor || "#0f172a"}
+                            onChange={(c) => handleUpdateFieldStyle(node.id, { textColor: c })}
                             label="Txt"
                           />
 
@@ -1800,10 +1739,7 @@ function BuildFormContent() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleUpdateFieldStyle(node.id, {
-                                  fontWeight:
-                                    node.style?.fontWeight === "bold"
-                                      ? "normal"
-                                      : "bold",
+                                  fontWeight: node.style?.fontWeight === "bold" ? "normal" : "bold",
                                 });
                               }}
                               className={`p-1 rounded-md text-xs transition-colors cursor-pointer ${
@@ -1823,9 +1759,7 @@ function BuildFormContent() {
                                 e.stopPropagation();
                                 handleUpdateFieldStyle(node.id, {
                                   fontStyle:
-                                    node.style?.fontStyle === "italic"
-                                      ? "normal"
-                                      : "italic",
+                                    node.style?.fontStyle === "italic" ? "normal" : "italic",
                                 });
                               }}
                               className={`p-1 rounded-md text-xs transition-colors cursor-pointer ${
@@ -1883,9 +1817,7 @@ function BuildFormContent() {
                           type="text"
                           value={node.label}
                           onMouseDown={(e) => e.stopPropagation()}
-                          onChange={(e) =>
-                            handleUpdateFieldLabel(node.id, e.target.value)
-                          }
+                          onChange={(e) => handleUpdateFieldLabel(node.id, e.target.value)}
                           style={{
                             fontFamily: parseFontFamily(node.font),
                             fontWeight: node.style?.fontWeight || "inherit",
@@ -1901,9 +1833,7 @@ function BuildFormContent() {
                           type="text"
                           value={node.description || ""}
                           onMouseDown={(e) => e.stopPropagation()}
-                          onChange={(e) =>
-                            handleUpdateFieldDescription(node.id, e.target.value)
-                          }
+                          onChange={(e) => handleUpdateFieldDescription(node.id, e.target.value)}
                           style={{
                             fontFamily: parseFontFamily(node.font),
                             fontWeight: node.style?.fontWeight || "inherit",
@@ -1917,7 +1847,7 @@ function BuildFormContent() {
 
                         {/* Inline Placeholder / Options Customizer directly on Canvas Card */}
                         {["multiple_choice", "checkboxes", "dropdown", "picture_choice"].includes(
-                          node.type
+                          node.type,
                         ) ? (
                           <div className="flex flex-col gap-1.5 pt-2 border-t border-slate-200/50">
                             <span className="text-[10px] font-extrabold uppercase opacity-50">
@@ -1944,7 +1874,7 @@ function BuildFormContent() {
                                       className="bg-transparent focus:outline-none w-20"
                                     />
                                   </div>
-                                )
+                                ),
                               )}
                               <button
                                 type="button"
@@ -1953,9 +1883,7 @@ function BuildFormContent() {
                                   e.stopPropagation();
                                   const curOpts = [
                                     ...(activeField?.options || ["Option 1", "Option 2"]),
-                                    `Option ${
-                                      (activeField?.options?.length || 2) + 1
-                                    }`,
+                                    `Option ${(activeField?.options?.length || 2) + 1}`,
                                   ];
                                   handleUpdateFieldOptions(node.id, curOpts);
                                 }}
@@ -2056,7 +1984,8 @@ function BuildFormContent() {
             <div className="space-y-4">
               {activePage.fields.length === 0 ? (
                 <p className="text-xs text-slate-400 text-center py-6">
-                  No fields configured for Page {activePage.id}. Use the Canvas Fields panel to add inputs.
+                  No fields configured for Page {activePage.id}. Use the Canvas Fields panel to add
+                  inputs.
                 </p>
               ) : (
                 activePage.fields.map((field, idx) => (
@@ -2122,11 +2051,11 @@ function BuildFormContent() {
             </div>
 
             <div className="space-y-1.5">
-              <h3 className="text-xl font-black text-slate-900 tracking-tight">
-                Save Form Draft?
-              </h3>
+              <h3 className="text-xl font-black text-slate-900 tracking-tight">Save Form Draft?</h3>
               <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                Would you like to save this form's layout, fields, and flow as a <span className="font-bold text-[#0d5c41]">Draft</span> in your database before leaving?
+                Would you like to save this form's layout, fields, and flow as a{" "}
+                <span className="font-bold text-[#0d5c41]">Draft</span> in your database before
+                leaving?
               </p>
             </div>
 
@@ -2231,7 +2160,8 @@ function BuildFormContent() {
                     🎉 Form Published Successfully!
                   </h3>
                   <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                    Your form <span className="font-bold text-slate-800">"{formTitle}"</span> is now live and ready to receive responses.
+                    Your form <span className="font-bold text-slate-800">"{formTitle}"</span> is now
+                    live and ready to receive responses.
                   </p>
                 </div>
 
@@ -2250,9 +2180,10 @@ function BuildFormContent() {
                       <button
                         type="button"
                         onClick={() => {
-                          const fullUrl = typeof window !== "undefined"
-                            ? `${window.location.origin}/submit/${savedFormId || ""}`
-                            : `/submit/${savedFormId || ""}`;
+                          const fullUrl =
+                            typeof window !== "undefined"
+                              ? `${window.location.origin}/submit/${savedFormId || ""}`
+                              : `/submit/${savedFormId || ""}`;
                           if (typeof navigator !== "undefined" && navigator.clipboard) {
                             navigator.clipboard.writeText(fullUrl);
                           }
@@ -2449,9 +2380,7 @@ function BuildFormContent() {
                           <span>Form Outer Background</span>
                           <ColorRingPicker
                             color={formTheme.backgroundColor}
-                            onChange={(c) =>
-                              setFormTheme({ ...formTheme, backgroundColor: c })
-                            }
+                            onChange={(c) => setFormTheme({ ...formTheme, backgroundColor: c })}
                           />
                         </div>
 
@@ -2459,9 +2388,7 @@ function BuildFormContent() {
                           <span>Card Background</span>
                           <ColorRingPicker
                             color={formTheme.cardBackgroundColor}
-                            onChange={(c) =>
-                              setFormTheme({ ...formTheme, cardBackgroundColor: c })
-                            }
+                            onChange={(c) => setFormTheme({ ...formTheme, cardBackgroundColor: c })}
                           />
                         </div>
 
@@ -2508,11 +2435,10 @@ function BuildFormContent() {
                       <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 border border-slate-200 flex items-center justify-center mx-auto">
                         <Settings className="w-6 h-6" />
                       </div>
-                      <h4 className="font-extrabold text-base text-slate-900">
-                        Form Settings
-                      </h4>
+                      <h4 className="font-extrabold text-base text-slate-900">Form Settings</h4>
                       <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto leading-relaxed">
-                        Form access permissions, response limits, email notifications, and integrations will appear here.
+                        Form access permissions, response limits, email notifications, and
+                        integrations will appear here.
                       </p>
                       <span className="inline-block px-3 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full border border-slate-200 uppercase">
                         Configurable / Empty
@@ -2533,9 +2459,10 @@ function BuildFormContent() {
                     <button
                       type="button"
                       onClick={() => {
-                        const fullUrl = typeof window !== "undefined"
-                          ? `${window.location.origin}/submit/${savedFormId || ""}`
-                          : `/submit/${savedFormId || ""}`;
+                        const fullUrl =
+                          typeof window !== "undefined"
+                            ? `${window.location.origin}/submit/${savedFormId || ""}`
+                            : `/submit/${savedFormId || ""}`;
                         if (typeof navigator !== "undefined" && navigator.clipboard) {
                           navigator.clipboard.writeText(fullUrl);
                         }
