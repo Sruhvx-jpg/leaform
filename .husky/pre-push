@@ -1,0 +1,3 @@
+# Auto-fix vulnerabilities and ensure clean audit before pushing
+pnpm audit:fix
+pnpm audit

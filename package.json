@@ -1,0 +1,86 @@
+{
+  "name": "leafform",
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "commit": "cz",
+    "audit:fix": "pnpm audit --fix && pnpm install",
+    "build": "dotenv -- turbo build",
+    "dev": "dotenv -- turbo dev",
+    "db:generate": "dotenv -- turbo db:generate",
+    "db:migrate": "dotenv -- turbo db:migrate",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "check-types": "turbo run check-types"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.0",
+    "@commitlint/config-conventional": "^19.8.0",
+    "@types/express": "^5.0.6",
+    "commitizen": "^4.3.1",
+    "cz-conventional-changelog": "^3.3.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
+    "prettier": "^3.7.4",
+    "turbo": "^2.7.2",
+    "typescript": "5.9.2"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "pnpm": {
+    "overrides": {
+      "keyv": "4.5.4",
+      "flat-cache": "4.0.1",
+      "file-entry-cache": "8.0.0",
+      "cacheable": "1.8.8",
+      "cacheable-request": "10.2.14",
+      "cache-manager": "6.4.0",
+      "axios": "1.7.9",
+      "esbuild": "^0.25.0",
+      "js-yaml": "^4.1.1",
+      "qs": "^6.14.2",
+      "minimatch": "^9.0.7",
+      "rollup": "^4.59.0",
+      "ajv": "^6.14.0",
+      "flatted": "^3.4.2",
+      "h3": "^1.15.9",
+      "brace-expansion": "^2.0.1",
+      "picomatch": "^4.0.4",
+      "yaml": "^2.8.3",
+      "path-to-regexp": "^8.4.0",
+      "lodash": "^4.17.23",
+      "defu": "^6.1.5",
+      "drizzle-orm": "^0.45.2",
+      "postcss": "^8.5.23",
+      "next": "^16.2.11",
+      "turbo": "^2.9.14",
+      "body-parser": "^2.3.0",
+      "sharp": "^0.35.0"
+    }
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "dotenv-cli": "^11.0.0",
+    "express": "^5.2.1",
+    "ioredis": "^5.11.0",
+    "leafform": "link:"
+  }
+}
