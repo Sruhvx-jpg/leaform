@@ -1,3 +1,4 @@
+// DB tables: leaf_account, app_refresh_tokens
 import express, { Request, Response, NextFunction } from "express";
 import { logger } from "@repo/logger";
 import cors from "cors";
@@ -91,11 +92,33 @@ app.use(
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "trpc-accept", "Authorization"],
+    allowedHeaders: [
+      "Content-Type",
+      "trpc-accept",
+      "Authorization",
+      "authorization",
+      "Cookie",
+      "cookie",
+    ],
   }),
 );
 
-app.use(express.json())
+app.use(express.json());
+
+// Express cookie parser middleware to extract authentication_token from incoming headers
+app.use((req, _res, next) => {
+  if (!req.cookies && req.headers.cookie) {
+    const cookies: Record<string, string> = {};
+    req.headers.cookie.split(";").forEach((cookie) => {
+      const parts = cookie.split("=");
+      const name = parts.shift()?.trim();
+      const value = parts.join("=").trim();
+      if (name) cookies[name] = decodeURIComponent(value);
+    });
+    (req as any).cookies = cookies;
+  }
+  next();
+});
 
 app.get("/", (req, res) => {
   return res.json({ message: "LeafForm is up and running..." });
@@ -122,6 +145,7 @@ app.get("/openapi.json", (req, res) => {
 logger.debug(`docs: ${env.BASE_URL}/docs`);
 app.use("/docs", apiReference({ url: "/openapi.json" }));
 
+logger.debug(`inngest: ${env.BASE_URL}/analytics`);
 app.use("/api/analytics", createAnalyticsRoutes());
 app.get("/analytics", (req, res) => {
   res.redirect("/api/analytics/dashboard");

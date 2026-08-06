@@ -7,20 +7,20 @@ class apiErr extends Error {
     this.isOperational = true;
   }
 
-  static dataNotFound(message = "DATA NOT FOUND: ++⚠️This is a vanilla template, modify with respect to the use case⚠️++") {
+  static dataNotFound(message = "Requested data could not be found.") {
     return new apiErr(404, message);
   }
 
-  static dataAlreadyExist(message = "DATA ALREADY EXIST: ++⚠️This is a vanilla template, modify with respect to the use case⚠️++") {
-    return new apiErr(0, message);
+  static dataAlreadyExist(message = "An account with this email already exists.") {
+    return new apiErr(409, message);
   }
 
-  static unauthorizedAccess(message = "UNAUTHORIZED ACCESS: ++⚠️This is a vanilla template, modify with respect to the use case⚠️++") {
+  static unauthorizedAccess(message = "Invalid email or password.") {
     return new apiErr(401, message);
   }
 
-  static unknownErr(message = "UNKNOWN ERROR: ++⚠️This is a vanilla template, modify with respect to the use case⚠️++") {
-    return new apiErr(0, message);
+  static unknownErr(message = "An unexpected error occurred. Please try again later.") {
+    return new apiErr(500, message);
   }
 }
 

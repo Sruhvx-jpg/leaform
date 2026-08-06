@@ -1,19 +1,68 @@
-import { z, zodUndefinedModel } from "../../schema";
+import { zodUndefinedModel } from "../../schema";
 import { userService } from "../../services";
-import { getAuthenticationMethodOutputSchema } from "@repo/services/user/model";
-import { publicProcedure, router } from "../../trpc";
+import { publicProcedure, TokenBasedProcedure, router } from "../../trpc";
 import { generatePath } from "../../utils/path-generator";
+import { setAuthToken } from "../../utils/cookie";
+import {
+  signUpUserInputModel,
+  signUpUserOutputModel,
+  loginUserInputModel,
+  loginUserOutputModel,
+  getMeOutputModel,
+} from "./model";
 
 const TAGS = ["Authentication"];
 const getPath = generatePath("/authentication");
 
 export const authRouter = router({
-  getSupportedAuthenticationProviders: publicProcedure
-    .meta({ openapi: { method: "GET", path: getPath("/supported-providers"), tags: TAGS } })
+  signUpUser: publicProcedure
+    .meta({ openapi: { method: "POST", path: getPath("/signup"), tags: TAGS } })
+    .input(signUpUserInputModel)
+    .output(signUpUserOutputModel)
+    .mutation(async ({ input, ctx }) => {
+      try {
+        const result = await userService.signup(input);
+        setAuthToken(ctx, result.accessToken);
+        return {
+          fullName: result.fullName,
+          email: result.email,
+        };
+      } catch (error) {
+        throw error;
+      }
+    }),
+
+  loginUser: publicProcedure
+    .meta({ openapi: { method: "POST", path: getPath("/login"), tags: TAGS } })
+    .input(loginUserInputModel)
+    .output(loginUserOutputModel)
+    .mutation(async ({ input, ctx }) => {
+      try {
+        const result = await userService.login(input);
+        setAuthToken(ctx, result.accessToken);
+        return {
+          fullName: result.fullName,
+          email: result.email,
+        };
+      } catch (error) {
+        throw error;
+      }
+    }),
+
+  getMe: TokenBasedProcedure
+    .meta({ openapi: { method: "GET", path: getPath("/me"), tags: TAGS } })
     .input(zodUndefinedModel)
-    .output(z.readonly(z.array(getAuthenticationMethodOutputSchema)))
-    .query(async () => {
-      const supportedMethods = await userService.getAuthenticationMethods();
-      return supportedMethods;
+    .output(getMeOutputModel)
+    .query(async ({ ctx }) => {
+      try {
+        const user = await userService.getUserById(ctx.user.sub);
+        return {
+          fullName: user.fullName,
+          email: user.email,
+          emailVerified: user.emailVerified ?? false,
+        };
+      } catch (error) {
+        throw error;
+      }
     }),
 });

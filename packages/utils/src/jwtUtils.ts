@@ -18,7 +18,7 @@ export const generateRefTok = (payload: UserPayload): string => {
 };
 
 export const generateAccTok = (payload: UserPayload): string => {
-  return jwt.sign({ ...payload, type: "access" }, JWT_ACCESS_SECRET, { expiresIn: "15m" });
+  return jwt.sign({ ...payload, type: "access" }, JWT_ACCESS_SECRET, { expiresIn: "7d" });
 };
 
 export const verifyAccTok = (token: string): TokenPayload => {

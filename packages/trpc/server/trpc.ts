@@ -24,26 +24,28 @@ export const router = tRPCContext.router;
 const analyticsMiddleware = tRPCContext.middleware(createAnalyticsMiddleware());
 
 const fixedWindowRateLimiter = tRPCContext.middleware(async ({ ctx, next }) => {
-    const ip = ctx.req.ip
+  try {
+    const ip = ctx.req?.ip || "127.0.0.1";
+    const key = `FWRL:${ip}`;
+    const curr = await redis.incr(key);
 
-  const key = `FWRL:${ip}`
-  console.log("KEY: ", key)
-  const curr = await redis.incr(key)
-  console.log("current key:", curr)
+    if (curr === 1) {
+      await redis.expire(key, 60);
+    }
 
-  if (curr === 1) {
-    await redis.expire(key, 60)
-  }
-
-  if (curr > 5) {
-    throw new TRPCError({
-      code: "TOO_MANY_REQUESTS",
-      message: "Too many requests. Try again later.",
-    });
+    if (curr > 100) {
+      throw new TRPCError({
+        code: "TOO_MANY_REQUESTS",
+        message: "Too many requests. Try again later.",
+      });
+    }
+  } catch (err) {
+    if (err instanceof TRPCError) throw err;
+    // Suppress Redis connection failures when Redis server is offline
   }
 
   return next();
-})
+});
 
 const verifyToken = tRPCContext.middleware(async ({ ctx, next }) => {
   const token = getAuthToken(ctx);
@@ -64,10 +66,13 @@ const verifyToken = tRPCContext.middleware(async ({ ctx, next }) => {
         user: payload,
       },
     });
-  } catch {
+  } catch (err: any) {
+    console.error("[AUTH VERIFY ERROR]:", err?.name, err?.message);
     throw new TRPCError({
       code: "UNAUTHORIZED",
-      message: "Invalid or expired access token",
+      message: err?.name === "TokenExpiredError"
+        ? "Access token expired. Please log in again."
+        : "Invalid access token",
     });
   }
 });

@@ -10,8 +10,8 @@ const ONE_YEAR = 1 * ONE_MONTH
 const defaultCookieOption: CookieOptions = ({
     path: "/",
     httpOnly: true,
-    secure: false,
-    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
     maxAge: ONE_YEAR
 })
 
@@ -24,7 +24,13 @@ export function createCookieFactory(res: Response) {
 
 export function getCookieFactory(req: Request) {
     return function getCookie(name: string) {
-        return req.cookies?.[name]
+        if (req.cookies && req.cookies[name]) {
+            return req.cookies[name];
+        }
+        const rawCookies = req.headers?.cookie;
+        if (!rawCookies) return undefined;
+        const match = rawCookies.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+        return match ? decodeURIComponent(match[1]!) : undefined;
     }
 }
 
@@ -32,7 +38,7 @@ export function getCookieFactory(req: Request) {
 
 export function deleteCookieFactory(res: Response) {
     return function deleteCookie(name: string) {
-        res.clearCookie(name)
+        res.clearCookie(name, { path: "/" })
     }
 }
 
@@ -44,7 +50,7 @@ export function setAuthToken(ctx: TRPCContext, accessToken: string) {
 }
 
 export function getAuthToken(ctx: TRPCContext) {
-    return ctx.getCookie("authentication_token")
+    return ctx.getCookie("authentication_token") || ctx.getCookie("acc_tok")
 }
 
 export function deleteAuthToken(ctx: TRPCContext) {

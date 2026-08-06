@@ -3,10 +3,42 @@
   "version": "1.0.0",
   "private": true,
   "exports": {
-    "./user": "./src/user/index.ts",
-    "./user/*": "./src/user/*.ts",
-    "./clients/*": "./src/clients/*.ts",
-    "./env": "./src/env.ts"
+    "./user": {
+      "types": "./user/core.ts",
+      "import": "./user/core.ts",
+      "require": "./user/core.ts",
+      "default": "./user/core.ts"
+    },
+    "./user/*": {
+      "types": "./user/*.ts",
+      "import": "./user/*.ts",
+      "require": "./user/*.ts",
+      "default": "./user/*.ts"
+    },
+    "./form": {
+      "types": "./form/core.ts",
+      "import": "./form/core.ts",
+      "require": "./form/core.ts",
+      "default": "./form/core.ts"
+    },
+    "./form/*": {
+      "types": "./form/*.ts",
+      "import": "./form/*.ts",
+      "require": "./form/*.ts",
+      "default": "./form/*.ts"
+    },
+    "./clients/*": {
+      "types": "./clients/*.ts",
+      "import": "./clients/*.ts",
+      "require": "./clients/*.ts",
+      "default": "./clients/*.ts"
+    },
+    "./env": {
+      "types": "./env.ts",
+      "import": "./env.ts",
+      "require": "./env.ts",
+      "default": "./env.ts"
+    }
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
@@ -17,6 +49,8 @@
   "dependencies": {
     "@repo/database": "workspace:*",
     "@repo/logger": "workspace:*",
+    "@repo/utils": "workspace:*",
+    "drizzle-orm": "^0.45.2",
     "google-auth-library": "^10.5.0",
     "zod": "^4.3.5"
   }
