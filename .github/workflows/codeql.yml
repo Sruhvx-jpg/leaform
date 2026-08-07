@@ -20,8 +20,8 @@ on:
       - ".gitignore"
       - "LICENSE"
   schedule:
-    # Run daily at 00:00 UTC
-    - cron: "0 0 * * *"
+    # Run daily at a non-standard time (03:23 UTC) to avoid peak queue delays
+    - cron: "23 3 * * *"
   workflow_dispatch: # Allows manual trigger via API or Telegram bot
 
 concurrency:
@@ -57,6 +57,7 @@ jobs:
           ACTOR: ${{ github.actor }}
           COMMIT_MSG: ${{ github.event.head_commit.message }}
           RUN_ID: ${{ github.run_id }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: node .github/scripts/notify-telegram.js
 
       - name: Initialize CodeQL
@@ -82,6 +83,7 @@ jobs:
           ACTOR: ${{ github.actor }}
           COMMIT_MSG: ${{ github.event.head_commit.message }}
           RUN_ID: ${{ github.run_id }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: node .github/scripts/notify-telegram.js
 
       - name: Notify Telegram on Failure
@@ -96,4 +98,5 @@ jobs:
           ACTOR: ${{ github.actor }}
           COMMIT_MSG: ${{ github.event.head_commit.message }}
           RUN_ID: ${{ github.run_id }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: node .github/scripts/notify-telegram.js
