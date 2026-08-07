@@ -57,7 +57,7 @@ jobs:
           ACTOR: ${{ github.actor }}
           COMMIT_MSG: ${{ github.event.head_commit.message }}
           RUN_ID: ${{ github.run_id }}
-        run: node etc/scripts/notify-telegram.js
+        run: node .github/scripts/notify-telegram.js
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
@@ -82,7 +82,7 @@ jobs:
           ACTOR: ${{ github.actor }}
           COMMIT_MSG: ${{ github.event.head_commit.message }}
           RUN_ID: ${{ github.run_id }}
-        run: node etc/scripts/notify-telegram.js
+        run: node .github/scripts/notify-telegram.js
 
       - name: Notify Telegram on Failure
         if: failure()
@@ -96,4 +96,4 @@ jobs:
           ACTOR: ${{ github.actor }}
           COMMIT_MSG: ${{ github.event.head_commit.message }}
           RUN_ID: ${{ github.run_id }}
-        run: node etc/scripts/notify-telegram.js
+        run: node .github/scripts/notify-telegram.js
