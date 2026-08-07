@@ -12,7 +12,7 @@
     }
   },
   "scripts": {
-    "db:migrate": "dotenv -- tsx migrate.ts",
+    "db:migrate": "dotenv -- drizzle-kit migrate",
     "db:generate": "dotenv -- drizzle-kit generate",
     "dev": "dotenv -- drizzle-kit studio"
   },
