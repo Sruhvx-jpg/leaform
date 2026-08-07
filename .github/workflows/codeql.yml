@@ -48,7 +48,7 @@ jobs:
 
       - name: Notify Telegram on Start
         run: |
-          curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          curl --fail -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
             -d "text=🚀 CodeQL Analysis started for ${{ github.repository }} (Trigger: ${{ github.event_name }}, Branch: ${{ github.ref_name }})."
 
@@ -66,13 +66,13 @@ jobs:
       - name: Notify Telegram on Success
         if: success()
         run: |
-          curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          curl --fail -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
             -d "text=✅ CodeQL Analysis completed successfully for ${{ github.repository }} (Trigger: ${{ github.event_name }}, Branch: ${{ github.ref_name }})."
 
       - name: Notify Telegram on Failure
         if: failure()
         run: |
-          curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          curl --fail -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
             -d "text=❌ CodeQL Analysis failed for ${{ github.repository }} (Trigger: ${{ github.event_name }}, Branch: ${{ github.ref_name }}). Details: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
