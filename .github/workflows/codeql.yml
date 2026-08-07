@@ -47,12 +47,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Notify Telegram on Start
-        run: |
-          TOKEN=$(echo "${{ secrets.TELEGRAM_BOT_TOKEN }}" | tr -d '\r\n ')
-          CHAT_ID=$(echo "${{ secrets.TELEGRAM_CHAT_ID }}" | tr -d '\r\n ')
-          curl --fail -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
-            -d "chat_id=${CHAT_ID}" \
-            -d "text=🚀 CodeQL Analysis started for ${{ github.repository }} (Trigger: ${{ github.event_name }}, Branch: ${{ github.ref_name }})."
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          STATUS: "start"
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          TRIGGER: ${{ github.event_name }}
+          ACTOR: ${{ github.actor }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          RUN_ID: ${{ github.run_id }}
+        run: node etc/scripts/notify-telegram.js
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
@@ -67,18 +72,28 @@ jobs:
 
       - name: Notify Telegram on Success
         if: success()
-        run: |
-          TOKEN=$(echo "${{ secrets.TELEGRAM_BOT_TOKEN }}" | tr -d '\r\n ')
-          CHAT_ID=$(echo "${{ secrets.TELEGRAM_CHAT_ID }}" | tr -d '\r\n ')
-          curl --fail -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
-            -d "chat_id=${CHAT_ID}" \
-            -d "text=✅ CodeQL Analysis completed successfully for ${{ github.repository }} (Trigger: ${{ github.event_name }}, Branch: ${{ github.ref_name }})."
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          STATUS: "success"
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          TRIGGER: ${{ github.event_name }}
+          ACTOR: ${{ github.actor }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          RUN_ID: ${{ github.run_id }}
+        run: node etc/scripts/notify-telegram.js
 
       - name: Notify Telegram on Failure
         if: failure()
-        run: |
-          TOKEN=$(echo "${{ secrets.TELEGRAM_BOT_TOKEN }}" | tr -d '\r\n ')
-          CHAT_ID=$(echo "${{ secrets.TELEGRAM_CHAT_ID }}" | tr -d '\r\n ')
-          curl --fail -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
-            -d "chat_id=${CHAT_ID}" \
-            -d "text=❌ CodeQL Analysis failed for ${{ github.repository }} (Trigger: ${{ github.event_name }}, Branch: ${{ github.ref_name }}). Details: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          STATUS: "failure"
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          TRIGGER: ${{ github.event_name }}
+          ACTOR: ${{ github.actor }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          RUN_ID: ${{ github.run_id }}
+        run: node etc/scripts/notify-telegram.js
