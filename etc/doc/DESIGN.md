@@ -54,10 +54,11 @@ This document defines the core UI/UX guidelines, color scheme, typography, and c
 ## 3. Typography & Micro-Interactions
 
 - **Font Family**: Sans-serif (`font-sans`) for main content, Serif (`font-serif`) accents for brand badges.
-- **Corner Radii**:
-  - Containers / Cards: `rounded-3xl`
-  - Inner Graphic Canvas / Preview Boxes: `rounded-2xl`
-  - Form Inputs / Buttons / Badges: `rounded-xl`
+- **Corner Radii** (Minimal & Slick Studio Aesthetic):
+  - Containers / Cards: `rounded-xl` (12px)
+  - Inner Graphic Canvas / Preview Boxes: `rounded-lg` (8px)
+  - Form Inputs / Buttons / Badges / Actions: `rounded-md` (6px)
+  - Global CSS token `--radius` is set to `0.3rem` to enforce consistency.
 - **Interactions & Animations**:
   - Smooth 300ms–500ms transitions (`transition-all duration-300` / `duration-500`).
   - Active hover states on interactive buttons and peek cards.
