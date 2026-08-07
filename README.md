@@ -23,6 +23,8 @@ LeafForm is structured as a **Turborepo monorepo** using **PNPM Workspaces**. Be
 monoreop-tRPC/
 ├── .agents/                     # Customization root containing workspace agent rules & skills
 ├── .github/                     # GitHub Actions CI/CD workflows and repository settings
+│   ├── scripts/                 # Utility automation and notification scripts
+│   │   └── notify-telegram.js   # Lightweight Telegram notification handler
 │   └── workflows/               # CI/CD pipeline automation scripts
 ├── .husky/                      # Git hooks management (Husky)
 │   ├── commit-msg               # Validates commit messages with Commitlint
@@ -100,6 +102,8 @@ monoreop-tRPC/
 │
 ├── etc/                         # Assets & Documentation
 │   ├── doc/                     # Architecture & Design Specifications
+│   │   ├── cicd/                # CI/CD & pipeline documentation
+│   │   │   └── README.md        # CodeQL & Telegram notification docs
 │   │   ├── DESIGN.md            # LeafForm UI/UX & Deep Forest Design System specification
 │   │   └── LOGO_DESIGN.md       # Logo and brand typography specification
 │   └── public/                  # Generated logos, media, and design system visual assets
@@ -254,6 +258,7 @@ pnpm dev
 ## 📖 Key Documentation & Entry Points
 
 - **System Architecture & Topology**: [etc/doc/SYSTEM_DESIGN.md](file:///home/dron/Documents/programming/monoreop-tRPC/etc/doc/SYSTEM_DESIGN.md)
+- **CI/CD & CodeQL Pipelines**: [etc/doc/cicd/README.md](file:///home/dron/Documents/programming/monoreop-tRPC/etc/doc/cicd/README.md)
 - **Code Design & Safety Specification**: [etc/doc/CODE_DESIGN.md](file:///home/dron/Documents/programming/monoreop-tRPC/etc/doc/CODE_DESIGN.md)
 - **UI/UX & Design System Spec**: [etc/doc/DESIGN.md](file:///home/dron/Documents/programming/monoreop-tRPC/etc/doc/DESIGN.md)
 - **Logo & Visual Brand Specs**: [etc/doc/LOGO_DESIGN.md](file:///home/dron/Documents/programming/monoreop-tRPC/etc/doc/LOGO_DESIGN.md)
