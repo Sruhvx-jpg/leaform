@@ -132,7 +132,8 @@ Data models in [models/](file:///home/dron/Documents/programming/monoreop-tRPC/p
 - **Users (`leaf_account`)**: Stores user credentials, email addresses, and profile data.
 - **Refresh Tokens (`app_refresh_tokens`)**: Stores active user session tokens with expiration dates.
 - **Forms (`form`)**: Stores form titles, descriptions, owner IDs, and status.
-- **Form Fields (`form_fields`)**: Stores field types (text, choice, rating, file upload, payment).
+- **Form Fields (`form_fields`)**: Stores field types (text, choice, rating, file upload, payment, captcha, etc.).
+- **Field Validations (`leaf_field_validations`)**: Stores regex validation patterns and error messages per field type to run dynamic validations.
 - **Form Submissions (`form_submissions`)**: Stores submitted responses in JSON format.
 
 ---

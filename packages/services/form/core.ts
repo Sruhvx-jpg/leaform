@@ -3,11 +3,36 @@
 //2. use try catch block everywhere, in catch block throw a error mentioning which private function it originated
 //3. imports should first start with pnpm package -> in house modules/packages -> current working directory files
 
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 // in house modules
-import db, { formsTable, formFieldsTable, formSubmissionsTable } from "@repo/database";
+import db, {
+  formsTable,
+  formFieldsTable,
+  formSubmissionsTable,
+  fieldValidationsTable,
+  ValidationRules,
+  FieldStyleConfig,
+} from "@repo/database";
 import { apiErr } from "@repo/utils";
+
+export interface SaveFieldInput {
+  type?: string;
+  label: string;
+  description?: string;
+  placeholder?: string;
+  required?: boolean;
+  font?: string;
+  style?: FieldStyleConfig;
+  options?: string[];
+  validationRules?: ValidationRules;
+}
+
+export interface FormAnswerInput {
+  fieldId?: string;
+  label: string;
+  value: string | number | boolean | string[];
+}
 
 class FormService {
   // ========================================== private methods ====================================================
@@ -55,21 +80,81 @@ class FormService {
     }
   }
 
-  private async saveFieldsRows(formId: string, fields: any[]) {
+  private async validateFieldValue(
+    fieldType: string,
+    strVal: string,
+    rules: ValidationRules,
+  ): Promise<string | null> {
+    // 1. Fetch custom pattern from rules first
+    const customPattern = rules.pattern || rules.customRegex;
+    if (customPattern) {
+      try {
+        const regex = new RegExp(customPattern);
+        if (!regex.test(strVal)) {
+          return rules.customErrorMessage || "Invalid format.";
+        }
+        return null;
+      } catch (e) {
+        console.error("Invalid custom regex pattern:", customPattern, e);
+      }
+    }
+
+    // 2. Fetch default pattern from leaf_field_validations table
+    try {
+      const [validation] = await db
+        .select()
+        .from(fieldValidationsTable)
+        .where(eq(fieldValidationsTable.fieldType, fieldType as any))
+        .limit(1);
+
+      if (validation && validation.regexPattern) {
+        const regex = new RegExp(validation.regexPattern);
+        if (!regex.test(strVal)) {
+          return validation.errorMessage || "Invalid format.";
+        }
+      }
+    } catch (e) {
+      console.error("Error executing database field validation:", e);
+    }
+
+    return null;
+  }
+
+  private async saveFieldsRows(formId: string, fields: SaveFieldInput[]) {
     try {
       if (!fields || fields.length === 0) return [];
-      const fieldRows = fields.map((f, idx) => ({
-        formId,
-        fieldType: f.type || "short_text",
-        label: f.label,
-        description: f.description || null,
-        placeholder: f.placeholder || null,
-        isRequired: !!f.required,
-        orderIndex: idx,
-        font: f.font || "Inter",
-        style: f.style || null,
-        options: f.options || null,
-      }));
+      const fieldRows = fields.map((f, idx) => {
+        const rules = f.validationRules || {};
+        const fType = f.type || "short_text";
+
+        // Assign default validation patterns if they aren't already set
+        if (!rules.pattern) {
+          if (fType === "email") {
+            rules.pattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+            rules.customErrorMessage = "Please enter a valid email address.";
+          } else if (fType === "url") {
+            rules.pattern = "^(https?:\\/\\/)?([a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})([\\/\\w.-]*)*\\/?$";
+            rules.customErrorMessage = "Please enter a valid URL.";
+          } else if (fType === "phone_number") {
+            rules.pattern = "^\\+?[\\d\\s\\-()]{7,20}$";
+            rules.customErrorMessage = "Please enter a valid phone number.";
+          }
+        }
+
+        return {
+          formId,
+          fieldType: fType,
+          label: f.label,
+          description: f.description || null,
+          placeholder: f.placeholder || null,
+          isRequired: !!f.required,
+          orderIndex: idx,
+          font: f.font || "Inter",
+          style: f.style || null,
+          options: f.options || null,
+          validationRules: rules,
+        };
+      });
 
       const inserted = await db
         .insert(formFieldsTable)
@@ -109,7 +194,7 @@ class FormService {
       description?: string;
       theme?: any;
       state?: "drafted" | "published" | "closed";
-      fields: any[];
+      fields: SaveFieldInput[];
     },
   ) {
     try {
@@ -199,7 +284,7 @@ class FormService {
 
   public async submitFormResponse(
     formId: string,
-    answers: Array<{ fieldId?: string; label: string; value: any }>,
+    answers: FormAnswerInput[],
     respondentIp?: string,
   ) {
     try {
@@ -217,16 +302,56 @@ class FormService {
         .orderBy(formFieldsTable.orderIndex);
 
       for (const field of fields) {
-        if (field.isRequired) {
-          const ans = answers.find((a) => a.fieldId === field.id);
-          const val = ans?.value;
-          if (
-            ans === undefined ||
-            val === undefined ||
-            val === null ||
-            (typeof val === "string" && val.trim() === "")
-          ) {
-            throw apiErr.badRequest(`Field "${field.label}" is required and cannot be empty.`);
+        const ans = answers.find((a) => a.fieldId === field.id);
+        const val = ans?.value;
+        const hasVal =
+          val !== undefined && val !== null && (typeof val !== "string" || val.trim() !== "");
+        const strVal = hasVal ? String(val).trim() : "";
+
+        // 1. Required check
+        if (field.isRequired && !hasVal) {
+          throw apiErr.badRequest(`Field "${field.label}" is required and cannot be empty.`);
+        }
+
+        // If not empty, check types and rules
+        if (hasVal) {
+          const fType = field.fieldType || "short_text";
+          const rules = field.validationRules || {};
+
+          // 2. Format validation (pattern check from database)
+          const errorMsg = await this.validateFieldValue(fType, strVal, rules);
+          if (errorMsg) {
+            throw apiErr.badRequest(errorMsg);
+          }
+
+          // 3. Number-specific validation
+          if (fType === "number") {
+            const num = Number(strVal);
+            if (isNaN(num)) {
+              throw apiErr.badRequest(`Field "${field.label}" must be a number.`);
+            }
+            if (rules.min !== undefined && num < Number(rules.min)) {
+              throw apiErr.badRequest(
+                `Field "${field.label}" value must be at least ${rules.min}.`,
+              );
+            }
+            if (rules.max !== undefined && num > Number(rules.max)) {
+              throw apiErr.badRequest(`Field "${field.label}" value cannot exceed ${rules.max}.`);
+            }
+          }
+
+          // 4. Min/Max text length checks
+          if (["short_text", "long_text", "rich_text"].includes(fType)) {
+            if (rules.minLength !== undefined && strVal.length < Number(rules.minLength)) {
+              throw apiErr.badRequest(
+                `Field "${field.label}" must be at least ${rules.minLength} characters.`,
+              );
+            }
+            if (rules.maxLength !== undefined && strVal.length > Number(rules.maxLength)) {
+              throw apiErr.badRequest(
+                `Field "${field.label}" cannot exceed ${rules.maxLength} characters.`,
+              );
+            }
           }
         }
       }
@@ -288,46 +413,61 @@ class FormService {
 
   public async getAvailableFieldTypes() {
     try {
-      return [
-        { type: "short_text", name: "Short Text", category: "Text", icon: "FileText" },
-        { type: "long_text", name: "Long Text", category: "Text", icon: "AlignLeft" },
-        { type: "rich_text", name: "Rich Text Editor", category: "Text", icon: "Edit3" },
-        { type: "email", name: "Email Address", category: "Contact", icon: "Mail" },
-        { type: "phone_number", name: "Phone Number", category: "Contact", icon: "Phone" },
-        { type: "address", name: "Street Address", category: "Contact", icon: "MapPin" },
-        { type: "url", name: "Website URL", category: "Contact", icon: "Globe" },
-        { type: "number", name: "Number Input", category: "Choice", icon: "Hash" },
-        { type: "slider", name: "Range Slider", category: "Choice", icon: "Sliders" },
-        {
-          type: "multiple_choice",
-          name: "Multiple Choice",
-          category: "Choice",
-          icon: "CheckSquare",
-        },
-        { type: "checkboxes", name: "Checkboxes", category: "Choice", icon: "CheckSquare" },
-        { type: "dropdown", name: "Dropdown Select", category: "Choice", icon: "ChevronDown" },
-        { type: "picture_choice", name: "Picture Choice", category: "Choice", icon: "Image" },
-        { type: "date", name: "Date Picker", category: "Date & Time", icon: "Calendar" },
-        { type: "time", name: "Time Picker", category: "Date & Time", icon: "Clock" },
-        { type: "rating", name: "Star Rating", category: "Feedback", icon: "Star" },
-        { type: "review", name: "Customer Review", category: "Feedback", icon: "MessageSquare" },
-        { type: "nps", name: "Net Promoter Score (NPS)", category: "Feedback", icon: "BarChart3" },
-        {
-          type: "opinion_scale",
-          name: "Opinion Scale",
-          category: "Feedback",
-          icon: "SlidersHorizontal",
-        },
-        { type: "yes_no", name: "Yes / No Toggle", category: "Choice", icon: "ToggleLeft" },
-        { type: "statement", name: "Statement Block", category: "Layout", icon: "Info" },
-        { type: "matrix", name: "Matrix Grid", category: "Advanced", icon: "Grid" },
-        { type: "ranking", name: "Drag & Drop Ranking", category: "Advanced", icon: "ListOrdered" },
-        { type: "signature", name: "E-Signature", category: "Advanced", icon: "PenTool" },
-        { type: "payment", name: "Payment Integration", category: "Advanced", icon: "CreditCard" },
-        { type: "color_picker", name: "Color Picker", category: "Advanced", icon: "Palette" },
-        { type: "terms_consent", name: "Terms & Consent", category: "Legal", icon: "ShieldCheck" },
-        { type: "captcha", name: "CAPTCHA Verification", category: "Security", icon: "Lock" },
-      ];
+      const result = await db.execute(sql`
+        SELECT enumlabel 
+        FROM pg_enum 
+        JOIN pg_type ON pg_enum.enumtypid = pg_type.oid 
+        WHERE pg_type.typname = 'field_type'
+        ORDER BY pg_enum.enumsortorder
+      `);
+
+      const dbEnumValues = result.rows.map((row: any) => row.enumlabel as string);
+
+      const metadataMap: Record<string, { name: string; category: string; icon: string }> = {
+        short_text: { name: "Short Text", category: "Text", icon: "FileText" },
+        long_text: { name: "Long Text", category: "Text", icon: "AlignLeft" },
+        rich_text: { name: "Rich Text Editor", category: "Text", icon: "Edit3" },
+        email: { name: "Email Address", category: "Contact", icon: "Mail" },
+        phone_number: { name: "Phone Number", category: "Contact", icon: "Phone" },
+        address: { name: "Street Address", category: "Contact", icon: "MapPin" },
+        url: { name: "Website URL", category: "Contact", icon: "Globe" },
+        number: { name: "Number Input", category: "Choice", icon: "Hash" },
+        slider: { name: "Range Slider", category: "Choice", icon: "Sliders" },
+        multiple_choice: { name: "Multiple Choice", category: "Choice", icon: "CheckSquare" },
+        checkboxes: { name: "Checkboxes", category: "Choice", icon: "CheckSquare" },
+        dropdown: { name: "Dropdown Select", category: "Choice", icon: "ChevronDown" },
+        picture_choice: { name: "Picture Choice", category: "Choice", icon: "Image" },
+        date: { name: "Date Picker", category: "Date & Time", icon: "Calendar" },
+        time: { name: "Time Picker", category: "Date & Time", icon: "Clock" },
+        rating: { name: "Star Rating", category: "Feedback", icon: "Star" },
+        review: { name: "Customer Review", category: "Feedback", icon: "MessageSquare" },
+        nps: { name: "Net Promoter Score (NPS)", category: "Feedback", icon: "BarChart3" },
+        opinion_scale: { name: "Opinion Scale", category: "Feedback", icon: "SlidersHorizontal" },
+        yes_no: { name: "Yes / No Toggle", category: "Choice", icon: "ToggleLeft" },
+        statement: { name: "Statement Block", category: "Layout", icon: "Info" },
+        matrix: { name: "Matrix Grid", category: "Advanced", icon: "Grid" },
+        ranking: { name: "Drag & Drop Ranking", category: "Advanced", icon: "ListOrdered" },
+        signature: { name: "E-Signature", category: "Advanced", icon: "PenTool" },
+        payment: { name: "Payment Integration", category: "Advanced", icon: "CreditCard" },
+        color_picker: { name: "Color Picker", category: "Advanced", icon: "Palette" },
+        terms_consent: { name: "Terms & Consent", category: "Legal", icon: "ShieldCheck" },
+        captcha: { name: "CAPTCHA Verification", category: "Security", icon: "Lock" },
+      };
+
+      return dbEnumValues.map((type) => {
+        const meta = metadataMap[type] || {
+          name: type
+            .split("_")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" "),
+          category: "Advanced",
+          icon: "HelpCircle",
+        };
+        return {
+          type,
+          ...meta,
+        };
+      });
     } catch (error) {
       console.error("FormService.getAvailableFieldTypes internal error:", error);
       throw apiErr.unknownErr("Failed to fetch available field types.");

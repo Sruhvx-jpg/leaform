@@ -7,6 +7,10 @@ class apiErr extends Error {
     this.isOperational = true;
   }
 
+  static badRequest(message = "Bad request.") {
+    return new apiErr(400, message);
+  }
+
   static dataNotFound(message = "Requested data could not be found.") {
     return new apiErr(404, message);
   }

@@ -12,6 +12,16 @@ export interface FieldStyleConfig {
   textDecoration?: string;
 }
 
+export interface ValidationRules {
+  pattern?: string;
+  customRegex?: string;
+  customErrorMessage?: string;
+  min?: number;
+  max?: number;
+  minLength?: number;
+  maxLength?: number;
+}
+
 export const formFieldsTable = pgTable("leaf_form_fields", {
   id: uuid("id").primaryKey().defaultRandom(),
 
@@ -28,8 +38,8 @@ export const formFieldsTable = pgTable("leaf_form_fields", {
   font: text("font").default("Inter"),
   style: jsonb("style").$type<FieldStyleConfig>(),
 
-  options: jsonb("options"),
-  validationRules: jsonb("validation_rules"),
+  options: jsonb("options").$type<string[]>(),
+  validationRules: jsonb("validation_rules").$type<ValidationRules>(),
   defaultValue: text("default_value"),
 
   createdAt: timestamp("created_at").defaultNow(),

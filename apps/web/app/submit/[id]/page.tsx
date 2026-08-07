@@ -62,6 +62,71 @@ export default function PublicSubmitFormPage() {
     };
   }, [data?.form?.theme]);
 
+  const isDark = useMemo(() => {
+    // 1. Try card background color first
+    let bg = (formTheme.cardBackgroundColor || "").trim().toLowerCase();
+    if (bg === "transparent" || !bg) {
+      bg = (formTheme.backgroundColor || "").trim().toLowerCase();
+    }
+    if (bg === "white" || bg === "#ffffff" || bg === "#fff") return false;
+    if (bg === "black" || bg === "#000000" || bg === "#000") return true;
+
+    // Helper to calculate HSP luminance
+    const getLuminance = (r: number, g: number, b: number) => {
+      return Math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b));
+    };
+
+    // Hex parsing
+    if (bg.startsWith("#")) {
+      const color = bg.substring(1);
+      let r = 0,
+        g = 0,
+        b = 0;
+      if (color.length === 6) {
+        r = parseInt(color.substring(0, 2), 16);
+        g = parseInt(color.substring(2, 4), 16);
+        b = parseInt(color.substring(4, 6), 16);
+      } else if (color.length === 3) {
+        r = parseInt(color.charAt(0) + color.charAt(0), 16);
+        g = parseInt(color.charAt(1) + color.charAt(1), 16);
+        b = parseInt(color.charAt(2) + color.charAt(2), 16);
+      }
+      return getLuminance(r, g, b) < 127.5;
+    }
+
+    // RGB/RGBA parsing
+    const rgbMatch = bg.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/);
+    if (rgbMatch) {
+      const r = parseInt(rgbMatch[1]!, 10);
+      const g = parseInt(rgbMatch[2]!, 10);
+      const b = parseInt(rgbMatch[3]!, 10);
+      return getLuminance(r, g, b) < 127.5;
+    }
+
+    // 2. Fallback: check text color. If text color is dark, background is light
+    const text = (formTheme.textColor || "").trim().toLowerCase();
+    if (text === "white" || text === "#ffffff" || text === "#fff") return true;
+    if (text === "black" || text === "#000000" || text === "#000") return false;
+    if (text.startsWith("#")) {
+      const color = text.substring(1);
+      let r = 0,
+        g = 0,
+        b = 0;
+      if (color.length === 6) {
+        r = parseInt(color.substring(0, 2), 16);
+        g = parseInt(color.substring(2, 4), 16);
+        b = parseInt(color.substring(4, 6), 16);
+      } else if (color.length === 3) {
+        r = parseInt(color.charAt(0) + color.charAt(0), 16);
+        g = parseInt(color.charAt(1) + color.charAt(1), 16);
+        b = parseInt(color.charAt(2) + color.charAt(2), 16);
+      }
+      return getLuminance(r, g, b) >= 127.5;
+    }
+
+    return true;
+  }, [formTheme.cardBackgroundColor, formTheme.backgroundColor, formTheme.textColor]);
+
   const fields = data?.fields || [];
 
   const pages = useMemo(() => {
@@ -297,7 +362,9 @@ export default function PublicSubmitFormPage() {
         }}
       >
         {/* Header Title */}
-        <div className="text-center space-y-1.5 pb-4 border-b border-white/10">
+        <div
+          className={`text-center space-y-1.5 pb-4 border-b ${isDark ? "border-white/10" : "border-slate-200/80"}`}
+        >
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">{data.form.title}</h1>
           {data.form.description && (
             <p className="text-xs opacity-70 leading-relaxed max-w-md mx-auto">
@@ -305,7 +372,11 @@ export default function PublicSubmitFormPage() {
             </p>
           )}
           {pages.length > 1 && (
-            <div className="inline-block mt-2 px-3 py-1 rounded-md text-[10px] font-extrabold bg-white/10 text-white">
+            <div
+              className={`inline-block mt-2 px-3 py-1 rounded-md text-[10px] font-extrabold ${
+                isDark ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"
+              }`}
+            >
               Page {activePageIndex + 1} of {pages.length}
             </div>
           )}
@@ -332,7 +403,9 @@ export default function PublicSubmitFormPage() {
               return (
                 <div
                   key={field.id || idx}
-                  className="space-y-2.5 p-4 rounded-md bg-white/5 border border-white/10"
+                  className={`space-y-2.5 p-4 rounded-md border transition-all ${
+                    isDark ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-200/60"
+                  }`}
                 >
                   <label className="block text-xs sm:text-sm font-bold tracking-wide">
                     {field.label || `Question ${idx + 1}`}
@@ -351,7 +424,11 @@ export default function PublicSubmitFormPage() {
                       required={isReq}
                       onChange={(e) => handleFieldChange(field.id, e.target.value)}
                       placeholder={field.placeholder || "Type your response..."}
-                      className="w-full px-3.5 py-2.5 text-xs rounded-md bg-white/10 border border-white/20 focus:outline-none focus:border-emerald-400 transition-all"
+                      className={`w-full px-3.5 py-2.5 text-xs rounded-md border focus:outline-none focus:border-emerald-400 transition-all ${
+                        isDark
+                          ? "bg-white/10 border-white/20 text-white placeholder-white/30"
+                          : "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-1 focus:ring-emerald-500/20"
+                      }`}
                     />
                   ) : fType === "multiple_choice" || fType === "dropdown" ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
@@ -368,38 +445,85 @@ export default function PublicSubmitFormPage() {
                               }}
                               className={`px-3.5 py-2.5 rounded-md border text-xs font-bold transition-all text-left flex items-center justify-between cursor-pointer ${
                                 isSelected
-                                  ? "bg-emerald-500/20 border-emerald-400 text-white"
-                                  : "bg-white/5 border-white/15 hover:bg-white/10 text-white/80"
+                                  ? isDark
+                                    ? "bg-emerald-500/20 border-emerald-400 text-white"
+                                    : "bg-emerald-50/80 border-emerald-500 text-emerald-800"
+                                  : isDark
+                                    ? "bg-white/5 border-white/15 hover:bg-white/10 text-white/80"
+                                    : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
                               }`}
                             >
                               <span>{opt}</span>
                               {isSelected && (
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                <CheckCircle2
+                                  className={`w-3.5 h-3.5 shrink-0 ${isDark ? "text-emerald-400" : "text-emerald-600"}`}
+                                />
                               )}
                             </button>
                           );
                         },
                       )}
                     </div>
-                  ) : fType === "rating" || fType === "nps" || fType === "opinion_scale" ? (
-                    <div className="flex items-center gap-2 pt-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleFieldChange(field.id, star);
-                          }}
-                          className={`p-2 rounded-md transition-all cursor-pointer ${
-                            Number(val) >= star
-                              ? "bg-amber-400 text-slate-900 shadow-md scale-105"
-                              : "bg-white/10 text-white/40 hover:bg-white/20"
-                          }`}
-                        >
-                          <Star className="w-5 h-5 fill-current" />
-                        </button>
-                      ))}
+                  ) : fType === "rating" ? (
+                    <div className="flex items-center gap-1.5 pt-1">
+                      {[1, 2, 3, 4, 5].map((star) => {
+                        const active = Number(val) >= star;
+                        return (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleFieldChange(field.id, star);
+                            }}
+                            className="p-1 rounded-md hover:scale-110 transition-transform cursor-pointer focus:outline-none"
+                          >
+                            <Star
+                              className={`w-7 h-7 transition-colors ${
+                                active
+                                  ? "text-amber-400 fill-amber-400 drop-shadow-sm"
+                                  : isDark
+                                    ? "text-white/20 hover:text-amber-300"
+                                    : "text-slate-300 hover:text-amber-400"
+                              }`}
+                            />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : fType === "nps" || fType === "opinion_scale" ? (
+                    <div className="flex items-center gap-1 overflow-x-auto py-1">
+                      {Array.from({ length: 11 }, (_, i) => i).map((num) => {
+                        const isSelected = val === num || Number(val) === num;
+                        return (
+                          <button
+                            key={num}
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleFieldChange(field.id, num);
+                            }}
+                            style={
+                              isSelected
+                                ? {
+                                    backgroundColor: formTheme.accentColor,
+                                    borderColor: formTheme.accentColor,
+                                    color: "#ffffff",
+                                  }
+                                : {}
+                            }
+                            className={`w-9 h-9 rounded-md border text-xs font-black flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+                              isSelected
+                                ? "shadow-md scale-105"
+                                : isDark
+                                  ? "bg-white/10 border-white/20 text-white hover:bg-white/20"
+                                  : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200 hover:border-slate-300"
+                            }`}
+                          >
+                            {num}
+                          </button>
+                        );
+                      })}
                     </div>
                   ) : (
                     <input
@@ -420,7 +544,11 @@ export default function PublicSubmitFormPage() {
                       required={isReq}
                       onChange={(e) => handleFieldChange(field.id, e.target.value)}
                       placeholder={field.placeholder || "Your answer..."}
-                      className="w-full px-3.5 py-2.5 text-xs rounded-md bg-white/10 border border-white/20 focus:outline-none focus:border-emerald-400 transition-all"
+                      className={`w-full px-3.5 py-2.5 text-xs rounded-md border focus:outline-none focus:border-emerald-400 transition-all ${
+                        isDark
+                          ? "bg-white/10 border-white/20 text-white placeholder-white/30"
+                          : "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-1 focus:ring-emerald-500/20"
+                      }`}
                     />
                   )}
                 </div>
@@ -430,7 +558,9 @@ export default function PublicSubmitFormPage() {
         </div>
 
         {/* Footer Navigation & Submit Button */}
-        <div className="flex items-center justify-between pt-4 border-t border-white/10">
+        <div
+          className={`flex items-center justify-between pt-4 border-t ${isDark ? "border-white/10" : "border-slate-200/80"}`}
+        >
           {pages.length > 1 && (
             <button
               type="button"
@@ -439,7 +569,11 @@ export default function PublicSubmitFormPage() {
                 e.preventDefault();
                 setActivePageIndex((p) => Math.max(0, p - 1));
               }}
-              className="px-4 py-2 rounded-md text-xs font-bold border border-white/20 text-white/80 disabled:opacity-30 flex items-center gap-1 hover:bg-white/10 transition-colors"
+              className={`px-4 py-2 rounded-md text-xs font-bold border disabled:opacity-30 flex items-center gap-1 transition-colors ${
+                isDark
+                  ? "border-white/20 text-white/80 hover:bg-white/10"
+                  : "border-slate-300 text-slate-700 hover:bg-slate-50"
+              }`}
             >
               <ChevronLeft className="w-3.5 h-3.5" />
               <span>Previous</span>
