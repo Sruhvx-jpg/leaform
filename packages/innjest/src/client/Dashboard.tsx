@@ -13,7 +13,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import styles from "./Dashboard.module.css";
-import type { APICall, APIMetadata, AnalyticsSummary } from "../shared/types";
+import type { APICall, APIMetadata, AnalyticsSummary } from "../shared/types.js";
 
 export interface DashboardProps {
   apiBase?: string;

@@ -5,7 +5,7 @@ import type {
   AnalyticsSummary,
   EndpointStats,
   FilterOptions,
-} from "../shared/types";
+} from "../shared/types.js";
 
 function generateId(): string {
   try {
