@@ -75,13 +75,13 @@ export default function UserProfilePage() {
   const isVerified = Boolean(userInfo?.emailVerified);
 
   return (
-    <main className="min-h-screen w-full bg-slate-50 text-slate-900 flex flex-col">
+    <main className="min-h-screen w-full bg-slate-50 dark:bg-black text-slate-900 dark:text-white flex flex-col transition-colors duration-200">
       {/* Top Header Bar */}
-      <header className="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
+      <header className="w-full bg-white dark:bg-[#0a0a0a] border-b border-slate-200 dark:border-neutral-900 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           <Link
-            href="/dashboard"
-            className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors p-2 rounded-lg hover:bg-slate-100"
+            href="/getstarted"
+            className="flex items-center gap-2 text-sm text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-neutral-900"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Dashboard</span>
@@ -89,7 +89,7 @@ export default function UserProfilePage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-slate-200">
+          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-slate-200 dark:border-neutral-800">
             <Image
               src="/leafform_logo.png"
               alt="LeafForm Logo"
@@ -98,32 +98,32 @@ export default function UserProfilePage() {
               priority
             />
           </div>
-          <span className="font-bold text-slate-900 text-base">LeafForm</span>
+          <span className="font-bold text-slate-900 dark:text-white text-base">LeafForm</span>
         </div>
       </header>
 
       {/* Main Profile Container */}
       <div className="max-w-4xl w-full mx-auto p-6 md:p-10 flex flex-col gap-8">
         {/* Profile Card Header */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-6">
+        <div className="bg-white dark:bg-[#0e0e0e] rounded-2xl border border-slate-200 dark:border-neutral-900 p-6 md:p-8 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-6">
           <div className="w-20 h-20 rounded-full bg-emerald-800 text-white flex items-center justify-center text-3xl font-bold flex-shrink-0 shadow-inner">
             {displayName.charAt(0).toUpperCase()}
           </div>
 
           <div className="flex-1 text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2">
-              <h1 className="text-2xl font-bold text-slate-900">{displayName}</h1>
-              {isVerified && <CheckCircle className="w-5 h-5 text-emerald-600" />}
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{displayName}</h1>
+              {isVerified && <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />}
             </div>
-            <p className="text-slate-500 text-sm mt-1">{displayEmail}</p>
+            <p className="text-slate-500 dark:text-neutral-400 text-sm mt-1">{displayEmail}</p>
 
             <div className="mt-4 flex flex-wrap justify-center md:justify-start gap-2">
               {isVerified ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/30">
                   <ShieldCheck className="w-3.5 h-3.5" /> Verified Account
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/30">
                   <ShieldAlert className="w-3.5 h-3.5" /> Unverified Email
                 </span>
               )}
@@ -132,7 +132,7 @@ export default function UserProfilePage() {
 
           <Link
             href="/logout"
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors border border-red-200 cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/25 hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors border border-red-200 dark:border-red-900/30 cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             <span>Sign Out</span>

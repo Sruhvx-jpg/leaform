@@ -46,7 +46,7 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.3rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -122,3 +122,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes welcomeFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-welcome-fade {
+  animation: welcomeFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
