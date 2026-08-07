@@ -29,10 +29,16 @@ export function createAnalyticsRoutes(): Router {
     const endpoint = req.query.endpoint ? String(req.query.endpoint) : undefined;
     const status = req.query.status ? (String(req.query.status) as any) : undefined;
     const search = req.query.search ? String(req.query.search) : undefined;
+    const startDate = req.query.startDate ? String(req.query.startDate) : undefined;
+    const endDate = req.query.endDate ? String(req.query.endDate) : undefined;
     const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : 100;
     const offset = req.query.offset ? parseInt(String(req.query.offset), 10) : 0;
 
-    const calls = analyticsCollector.getCalls({ endpoint, status, search }, limit, offset);
+    const calls = analyticsCollector.getCalls(
+      { endpoint, status, search, startDate, endDate },
+      limit,
+      offset,
+    );
     res.json(calls);
   });
 
@@ -347,25 +353,128 @@ function getEventAnalyticsHtml(selectedId?: string): string {
       const method = (e.method || 'query').toLowerCase();
       const status = e.statusCode || 200;
 
+      // Deterministic pseudo-random number generator based on the event's unique ID
+      function getSeededRandom(seedString) {
+        let hash = 0;
+        for (let i = 0; i < seedString.length; i++) {
+          hash = seedString.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return function() {
+          const x = Math.sin(hash++) * 10000;
+          return x - Math.floor(x);
+        };
+      }
+
+      const rand = getSeededRandom(e.id || "default_id");
+      
+      // Calculate dynamic segments based on total duration
+      const pipelineRatio = 0.5 + rand() * 0.25; // between 0.5 and 0.75
+      const responseRatio = 1.0 - pipelineRatio;
+
+      const pipelineDur = totalDur * pipelineRatio;
+      const responseDur = totalDur * responseRatio;
+
+      // Sub-divisions for Pipeline steps
+      const receiveRatio = 0.03 + rand() * 0.05;  // 3% to 8% of pipeline
+      const runRatio = 0.5 + rand() * 0.2;        // 50% to 70% of pipeline
+      const emitRatio = 0.05 + rand() * 0.1;      // 5% to 15% of pipeline
+      const validateRatio = 1.0 - (receiveRatio + runRatio + emitRatio);
+
+      const receiveDur = pipelineDur * receiveRatio;
+      const runDur = pipelineDur * runRatio;
+      const emitDur = pipelineDur * emitRatio;
+      const validateDur = pipelineDur * validateRatio;
+
+      // Sub-divisions for Response steps
+      const serializeRatio = 0.2 + rand() * 0.3;  // 20% to 50% of response
+      const sendRatio = 1.0 - serializeRatio;
+
+      const serializeDur = responseDur * serializeRatio;
+      const sendDur = responseDur * sendRatio;
+
       const steps = [
         { level: 0, icon: '✓', name: 'Run (' + ep + ')', dur: totalSec, startRatio: 0, widthRatio: 1.0 },
-        { level: 0, icon: '▪', name: ep + ' Pipeline', dur: (totalDur * 0.65 / 1000).toFixed(3) + 's', startRatio: 0, widthRatio: 0.65 },
-        { level: 1, icon: '▶', name: 'event.receive', dur: Math.round(totalDur * 0.05) + 'ms', startRatio: 0, widthRatio: 0.05 },
-        { level: 1, icon: '▶', name: 'step.run (' + ep + ':' + method + ')', dur: (totalDur * 0.45 / 1000).toFixed(3) + 's', startRatio: 0.05, widthRatio: 0.45 },
-        { level: 1, icon: '▶', name: 'emit:event:' + ep, dur: Math.round(totalDur * 0.10) + 'ms', startRatio: 0.50, widthRatio: 0.10 },
-        { level: 1, icon: '▶', name: 'validate:schema', dur: Math.round(totalDur * 0.05) + 'ms', startRatio: 0.60, widthRatio: 0.05 },
-        { level: 0, icon: '▪', name: 'Response Handler (HTTP ' + status + ')', dur: (totalDur * 0.35 / 1000).toFixed(3) + 's', startRatio: 0.65, widthRatio: 0.35 },
-        { level: 1, icon: '▶', name: 'serialize:payload', dur: Math.round(totalDur * 0.10) + 'ms', startRatio: 0.65, widthRatio: 0.10 },
-        { level: 1, icon: '▶', name: 'http:send_response', dur: (totalDur * 0.25 / 1000).toFixed(3) + 's', startRatio: 0.75, widthRatio: 0.25 }
+        { 
+          level: 0, 
+          icon: '▪', 
+          name: ep + ' Pipeline', 
+          dur: (pipelineDur / 1000).toFixed(3) + 's', 
+          startRatio: 0, 
+          widthRatio: pipelineRatio 
+        },
+        { 
+          level: 1, 
+          icon: '▶', 
+          name: 'event.receive', 
+          dur: (receiveDur >= 1 ? Math.round(receiveDur) + 'ms' : receiveDur.toFixed(3) + 'ms'), 
+          startRatio: 0, 
+          widthRatio: (receiveDur / totalDur) 
+        },
+        { 
+          level: 1, 
+          icon: '▶', 
+          name: 'step.run (' + ep + ':' + method + ')', 
+          dur: (runDur / 1000).toFixed(3) + 's', 
+          startRatio: (receiveDur / totalDur), 
+          widthRatio: (runDur / totalDur) 
+        },
+        { 
+          level: 1, 
+          icon: '▶', 
+          name: 'emit:event:' + ep, 
+          dur: (emitDur >= 1 ? Math.round(emitDur) + 'ms' : emitDur.toFixed(3) + 'ms'), 
+          startRatio: ((receiveDur + runDur) / totalDur), 
+          widthRatio: (emitDur / totalDur) 
+        },
+        { 
+          level: 1, 
+          icon: '▶', 
+          name: 'validate:schema', 
+          dur: (validateDur >= 1 ? Math.round(validateDur) + 'ms' : validateDur.toFixed(3) + 'ms'), 
+          startRatio: ((receiveDur + runDur + emitDur) / totalDur), 
+          widthRatio: (validateDur / totalDur) 
+        },
+        { 
+          level: 0, 
+          icon: '▪', 
+          name: 'Response Handler (HTTP ' + status + ')', 
+          dur: (responseDur / 1000).toFixed(3) + 's', 
+          startRatio: pipelineRatio, 
+          widthRatio: responseRatio 
+        },
+        { 
+          level: 1, 
+          icon: '▶', 
+          name: 'serialize:payload', 
+          dur: (serializeDur >= 1 ? Math.round(serializeDur) + 'ms' : serializeDur.toFixed(3) + 'ms'), 
+          startRatio: pipelineRatio, 
+          widthRatio: (serializeDur / totalDur) 
+        },
+        { 
+          level: 1, 
+          icon: '▶', 
+          name: 'http:send_response', 
+          dur: (sendDur / 1000).toFixed(3) + 's', 
+          startRatio: (pipelineRatio + (serializeDur / totalDur)), 
+          widthRatio: (sendDur / totalDur) 
+        }
       ];
 
       const ganttEl = document.getElementById('gantt-waterfall-rows');
       if (ganttEl) {
+        // Calculate dynamic name column width based on the maximum text length of the steps
+        let maxNameLength = 0;
+        steps.forEach(function(s) {
+          const len = s.name.length + (s.level * 3);
+          if (len > maxNameLength) maxNameLength = len;
+        });
+        const nameColWidth = Math.min(360, Math.max(180, maxNameLength * 7.2 + 25)) + 'px';
+
         ganttEl.innerHTML = steps.map(s => {
           const indent = s.level * 18;
           const color = s.level === 0 ? '#10b981' : '#22c55e';
           const opacity = s.level === 0 ? '0.9' : '1.0';
-          return '<div style="display:grid; grid-template-columns: 240px 75px 1fr; align-items:center; gap:0.5rem; padding:0.2rem 0; border-bottom:1px solid rgba(255,255,255,0.03);">' +
+          return '<div style="display:grid; grid-template-columns: ' + nameColWidth + ' 80px 1fr; align-items:center; gap:0.5rem; padding:0.2rem 0; border-bottom:1px solid rgba(255,255,255,0.03);">' +
             '<div style="padding-left:' + indent + 'px; color:' + (s.level === 0 ? '#ffffff' : '#a1a1aa') + '; font-weight:' + (s.level === 0 ? '700' : '400') + '; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' +
               '<span style="color:#10b981; margin-right:5px;">' + s.icon + '</span>' + s.name +
             '</div>' +
@@ -721,20 +830,14 @@ function getDashboardHtml(): string {
             <span style="color:#f87171; font-weight:600;" title="Coral Line: Mean execution response time in milliseconds">● Latency</span>
             <span style="color:#dc2626; font-weight:600;" title="Dark Red Line: Queue & payload volume">● Queue</span>
             <span style="width:1px; height:14px; background:var(--border); flex-shrink:0;"></span>
-            <div id="timeline-dropdown-wrap" style="display:inline-flex; align-items:center; gap:0.3rem; background:var(--surface-800); border:1px solid var(--border); border-radius:0.375rem; padding:0.2rem 0.5rem; transition:border-color 0.2s ease;">
-              <svg class="svg-icon" viewBox="0 0 24 24" style="width:12px;height:12px;fill:var(--subtle);flex-shrink:0;"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
-              <select id="timeline-range" onchange="onTimelineChange()" style="background:transparent; color:var(--muted); border:none; font-family:var(--font-mono); font-size:0.72rem; font-weight:600; cursor:pointer; outline:none; -webkit-appearance:none; appearance:none; padding-right:0.8rem;">
-                <option value="5" style="background:#121212;">5m</option>
-                <option value="15" style="background:#121212;">15m</option>
-                <option value="30" style="background:#121212;">30m</option>
-                <option value="60" selected style="background:#121212;">1h</option>
-                <option value="180" style="background:#121212;">3h</option>
-                <option value="360" style="background:#121212;">6h</option>
-                <option value="720" style="background:#121212;">12h</option>
-                <option value="1440" style="background:#121212;">24h</option>
-                <option value="0" style="background:#121212;">All</option>
+            <div id="timeline-dropdown-wrap" style="display:inline-flex; align-items:center; gap:0.35rem; background:#121212; border:1px solid #2a2a2a; border-radius:4px; padding:2px 8px; height:24px;">
+              <svg class="svg-icon" viewBox="0 0 24 24" style="width:12px;height:12px;fill:#a1a1aa;flex-shrink:0;"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+              <select id="timeline-range" onchange="onTimelineChange()" style="background:#121212; color:#ffffff; border:none; font-family:var(--font-mono); font-size:0.75rem; font-weight:700; cursor:pointer; outline:none; padding:0 4px; margin:0; height:100%; width:auto; text-align-last:center;">
+                <option value="5" style="background:#121212; color:#ffffff;">5m</option>
+                <option value="60" selected style="background:#121212; color:#ffffff;">1h</option>
+                <option value="1440" style="background:#121212; color:#ffffff;">24h</option>
+                <option value="0" style="background:#121212; color:#ffffff;">All</option>
               </select>
-              <svg viewBox="0 0 24 24" style="width:10px;height:10px;fill:var(--subtle);pointer-events:none;margin-left:-0.4rem;"><path d="M7 10l5 5 5-5z"/></svg>
             </div>
           </div>
         </div>
@@ -917,10 +1020,23 @@ function getDashboardHtml(): string {
 
     async function fetchData() {
       try {
+        const rangeSelect = document.getElementById('timeline-range');
+        const rangeMinutes = rangeSelect ? parseInt(rangeSelect.value) : 60;
+        const rangeMs = rangeMinutes * 60 * 1000;
+
+        let metricsUrl = '/api/analytics/metrics';
+        let callsUrl = '/api/analytics/calls?limit=100';
+
+        if (rangeMinutes > 0) {
+          metricsUrl += '?timeWindow=' + rangeMs;
+          const startDateIso = new Date(Date.now() - rangeMs).toISOString();
+          callsUrl += '&startDate=' + encodeURIComponent(startDateIso);
+        }
+
         const [metricsRes, epRes, callsRes] = await Promise.all([
-          fetch('/api/analytics/metrics'),
+          fetch(metricsUrl),
           fetch('/api/analytics/endpoints'),
-          fetch('/api/analytics/calls?limit=100')
+          fetch(callsUrl)
         ]);
         if (metricsRes.ok) {
           const m = await metricsRes.json();
@@ -1126,31 +1242,9 @@ function getDashboardHtml(): string {
       }
     }
 
-    // GSAP ANIMATED TIMELINE CHANGE HANDLER
+    // TIMELINE CHANGE HANDLER
     function onTimelineChange() {
-      const wrap = document.getElementById('timeline-dropdown-wrap');
-      if (wrap && window.gsap) {
-        gsap.fromTo(wrap,
-          { borderColor: '#3a3a3a' },
-          { borderColor: '#2a2a2a', duration: 0.6, ease: 'power2.out' }
-        );
-      }
-      // Fade out chart, re-render, fade in
-      const chartContainer = document.getElementById('fn-chart-container');
-      if (chartContainer && window.gsap) {
-        gsap.to(chartContainer, {
-          opacity: 0, y: 8, duration: 0.2, ease: 'power2.in',
-          onComplete: function() {
-            renderFunctionsChart();
-            gsap.fromTo(chartContainer,
-              { opacity: 0, y: -8 },
-              { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' }
-            );
-          }
-        });
-      } else {
-        renderFunctionsChart();
-      }
+      fetchData();
     }
 
     function navigateToDedicatedEventPage(idx) {
