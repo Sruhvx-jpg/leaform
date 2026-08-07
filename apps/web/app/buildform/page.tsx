@@ -727,6 +727,7 @@ function BuildFormContent() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isPublishSuccess, setIsPublishSuccess] = useState(false);
+  const [publishStage, setPublishStage] = useState(0);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
@@ -782,8 +783,15 @@ function BuildFormContent() {
   const handleConfirmPublishLive = async () => {
     try {
       setIsPublishing(true);
+      setPublishStage(0);
+      const timer1 = setTimeout(() => setPublishStage(1), 600);
+      const timer2 = setTimeout(() => setPublishStage(2), 1200);
+
       await handleSaveFormDraft("published", false);
-      await new Promise((resolve) => setTimeout(resolve, 900));
+      await new Promise((resolve) => setTimeout(resolve, 1800));
+
+      clearTimeout(timer1);
+      clearTimeout(timer2);
       setIsPublishing(false);
       setIsPublishSuccess(true);
     } catch (err) {
@@ -834,7 +842,7 @@ function BuildFormContent() {
 
       setIsExitModalOpen(false);
       if (exitAfterSave) {
-        router.push("/userprofile");
+        router.push("/getstarted");
       }
     } catch (err: any) {
       console.error("Error saving form draft:", err);
@@ -2084,7 +2092,7 @@ function BuildFormContent() {
                 disabled={isSavingDraft}
                 onClick={() => {
                   setIsExitModalOpen(false);
-                  router.push("/userprofile");
+                  router.push("/getstarted");
                 }}
                 className="w-full py-3 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
               >
@@ -2135,18 +2143,37 @@ function BuildFormContent() {
 
             {/* Modal Body: Publishing Animation, Success Celebration Screen, or Tabs */}
             {isPublishing ? (
-              <div className="flex flex-col items-center justify-center p-14 text-center space-y-4 animate-fadeIn">
-                <div className="relative flex items-center justify-center">
-                  <div className="w-20 h-20 rounded-full border-4 border-emerald-200 border-t-[#0d5c41] animate-spin" />
-                  <Sparkles className="w-8 h-8 text-[#0d5c41] absolute animate-pulse" />
+              <div className="flex flex-col items-center justify-center p-14 text-center space-y-6 animate-fadeIn">
+                <div className="relative flex items-center justify-center w-24 h-24">
+                  {/* Outer spinning glow ring */}
+                  <div className="absolute inset-0 rounded-full border border-dashed border-[#0d5c41]/35 animate-spin" />
+                  {/* Middle pulsing ring */}
+                  <div className="absolute inset-2 rounded-full border border-[#134e3b]/30 animate-pulse" />
+                  {/* Center circle */}
+                  <div className="absolute inset-4 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center shadow-lg">
+                    <Sparkles className="w-7 h-7 text-[#0d5c41] animate-bounce" />
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <h3 className="text-lg font-black text-slate-900 tracking-tight">
-                    Publishing Your Form Live...
+
+                <div className="space-y-3 max-w-xs flex flex-col items-center">
+                  <h3 className="text-lg font-black text-slate-900 tracking-tight transition-all duration-300">
+                    {publishStage === 0
+                      ? "Bundling form schema..."
+                      : publishStage === 1
+                        ? "Generating submission endpoints..."
+                        : "Securing public database links..."}
                   </h3>
-                  <p className="text-xs text-slate-500 font-medium">
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed">
                     Deploying pages, custom themes, and fields to public database.
                   </p>
+
+                  {/* Gradient progress bar indicator */}
+                  <div className="w-56 bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200 mt-2">
+                    <div
+                      className="bg-gradient-to-r from-emerald-500 via-[#0d5c41] to-emerald-400 h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+                      style={{ width: `${((publishStage + 1) / 3) * 100}%` }}
+                    />
+                  </div>
                 </div>
               </div>
             ) : isPublishSuccess ? (
@@ -2218,7 +2245,7 @@ function BuildFormContent() {
                     onClick={() => {
                       setIsPublishSuccess(false);
                       setIsPublishModalOpen(false);
-                      router.push("/userprofile");
+                      router.push("/getstarted");
                     }}
                     className="w-full py-3 px-5 rounded-2xl bg-[#0d5c41] hover:bg-[#065f46] text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
@@ -2531,7 +2558,7 @@ export default function BuildFormPage() {
   return (
     <React.Suspense
       fallback={
-        <div className="min-h-screen bg-[#092218] flex items-center justify-center p-6 text-white text-xs font-semibold select-none">
+        <div className="min-h-screen bg-[#092218] dark:bg-black flex items-center justify-center p-6 text-white text-xs font-semibold select-none">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin" />
             <p className="text-emerald-200 font-medium">Loading Form Canvas...</p>

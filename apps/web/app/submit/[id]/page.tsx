@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Loader2,
@@ -25,11 +25,28 @@ export default function PublicSubmitFormPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [loadingStage, setLoadingStage] = useState(0);
+
+  useEffect(() => {
+    const timer1 = setTimeout(() => setLoadingStage(1), 800);
+    const timer2 = setTimeout(() => setLoadingStage(2), 1600);
+    const timer3 = setTimeout(() => setLoadingStage(3), 2400);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+    };
+  }, []);
+
+  const stages = ["Fetching your form...", "Building your form...", "Styling your form..."];
 
   const { data, isLoading, isError, error } = trpc.form.getPublicForm.useQuery(
     { id: formId },
     { enabled: !!formId, retry: false },
   );
+
+  const showLoader = (isLoading || loadingStage < 3) && !isError;
 
   const submitMutation = trpc.form.submitFormResponse.useMutation();
 
@@ -67,16 +84,53 @@ export default function PublicSubmitFormPage() {
     setAnswers((prev) => ({ ...prev, [fieldId]: val }));
   };
 
+  const validatePage = (pageIdx: number): boolean => {
+    const pageId = pages[pageIdx]?.id || pageIdx + 1;
+    const fieldsPerPage = Math.ceil(fields.length / pages.length) || 1;
+    const start = pageIdx * fieldsPerPage;
+    const pageFields = fields.slice(start, start + fieldsPerPage);
+
+    for (const field of pageFields) {
+      const isReq = field.isRequired ?? field.required ?? false;
+      if (isReq) {
+        const val = answers[field.id];
+        if (val === undefined || val === null || (typeof val === "string" && val.trim() === "")) {
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+
+  const handleNextPage = () => {
+    setSubmissionError(null);
+    if (!validatePage(activePageIndex)) {
+      setSubmissionError("Please answer all required questions on this page.");
+      return;
+    }
+    setActivePageIndex((p) => Math.min(pages.length - 1, p + 1));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmissionError(null);
+
+    // Validate all pages
+    for (let i = 0; i < pages.length; i++) {
+      if (!validatePage(i)) {
+        setActivePageIndex(i); // jump to the page with missing required fields
+        setSubmissionError("Please fill out all required fields before submitting.");
+        return;
+      }
+    }
+
     try {
       setIsSubmitting(true);
-      setSubmissionError(null);
 
       const formattedAnswers = fields.map((field: any) => ({
         fieldId: field.id,
         label: field.label,
-        value: answers[field.id] !== undefined ? answers[field.id] : "",
+        value: answers[field.id] !== undefined ? String(answers[field.id]).trim() : "",
       }));
 
       await submitMutation.mutateAsync({
@@ -93,12 +147,72 @@ export default function PublicSubmitFormPage() {
     }
   };
 
-  if (isLoading) {
+  if (showLoader) {
     return (
-      <main className="min-h-screen bg-[#092218] flex items-center justify-center p-6 text-white select-none">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-10 h-10 animate-spin text-emerald-400" />
-          <p className="text-xs font-semibold text-emerald-200">Loading form...</p>
+      <main className="min-h-screen bg-black flex items-center justify-center p-6 text-white select-none relative overflow-hidden">
+        {/* Radial ambient background glows */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-emerald-500/5 blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-emerald-500/5 blur-3xl" />
+
+        <div className="w-full max-w-xs flex flex-col gap-6 relative z-10">
+          <div className="space-y-1">
+            <h3 className="text-sm font-extrabold text-emerald-400 tracking-wider uppercase text-center">
+              Preparing Experience
+            </h3>
+            <p className="text-[10px] text-slate-400 font-bold text-center uppercase tracking-widest">
+              LeafForm Interactive
+            </p>
+          </div>
+
+          {/* Checklist of stages */}
+          <div className="space-y-4 py-2">
+            {stages.map((stageText, idx) => {
+              const isCompleted = loadingStage > idx;
+              const isActive = loadingStage === idx;
+
+              return (
+                <div
+                  key={idx}
+                  className={`flex items-center gap-3 transition-all duration-500 ${
+                    isActive ? "scale-[1.02] translate-x-1" : ""
+                  }`}
+                >
+                  <div className="flex-shrink-0">
+                    {isCompleted ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 drop-shadow-[0_0_4px_rgba(52,211,153,0.4)]" />
+                    ) : isActive ? (
+                      <Loader2 className="w-4 h-4 text-emerald-300 animate-spin" />
+                    ) : (
+                      <div className="w-4 h-4 rounded-full border-2 border-emerald-950/40 bg-emerald-950/20" />
+                    )}
+                  </div>
+                  <span
+                    className={`text-xs font-bold tracking-wide transition-colors duration-500 ${
+                      isActive
+                        ? "text-white font-extrabold"
+                        : isCompleted
+                          ? "text-emerald-500/65 line-through decoration-emerald-800/20"
+                          : "text-slate-500/40"
+                    }`}
+                  >
+                    {stageText}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Glowing Gradient Progress Bar */}
+          <div className="w-full bg-emerald-950/40 rounded-full h-1.5 overflow-hidden border border-emerald-900/10 mt-2">
+            <div
+              className="bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+              style={{ width: `${Math.min(((loadingStage + 1) / 3) * 100, 100)}%` }}
+            />
+          </div>
+
+          <span className="text-[9px] text-emerald-600/50 uppercase tracking-widest text-center font-bold">
+            conversational data logic active
+          </span>
         </div>
       </main>
     );
@@ -106,22 +220,15 @@ export default function PublicSubmitFormPage() {
 
   if (isError || !data?.form) {
     return (
-      <main className="min-h-screen bg-[#092218] flex items-center justify-center p-6 text-white select-none">
-        <div className="max-w-md w-full bg-[#0e2c20] border border-emerald-900/80 p-8 rounded-3xl text-center space-y-4 shadow-2xl">
-          <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-400 border border-red-500/20 flex items-center justify-center mx-auto">
+      <main className="min-h-screen bg-black flex items-center justify-center p-6 text-white select-none">
+        <div className="max-w-md w-full bg-neutral-950 border border-neutral-900 p-8 rounded-xl text-center space-y-4 shadow-2xl">
+          <div className="w-12 h-12 rounded-md bg-red-500/10 text-red-400 border border-red-500/20 flex items-center justify-center mx-auto">
             <AlertCircle className="w-6 h-6" />
           </div>
           <h2 className="text-xl font-bold text-white">Form Not Found</h2>
           <p className="text-xs text-slate-300 leading-relaxed">
             This form link may be invalid, closed, or no longer available.
           </p>
-          <button
-            type="button"
-            onClick={() => router.push("/")}
-            className="px-5 py-2.5 rounded-xl bg-[#0d5c41] text-white text-xs font-bold hover:bg-emerald-700 transition-all shadow-md cursor-pointer inline-block"
-          >
-            Go to LeafForm Home
-          </button>
         </div>
       </main>
     );
@@ -134,7 +241,7 @@ export default function PublicSubmitFormPage() {
         style={{ backgroundColor: formTheme.backgroundColor }}
       >
         <div
-          className="max-w-lg w-full p-8 sm:p-10 rounded-3xl border shadow-2xl text-center space-y-6 animate-fadeIn"
+          className="max-w-lg w-full p-8 sm:p-10 rounded-xl border shadow-2xl text-center space-y-6 animate-fadeIn"
           style={{
             backgroundColor: formTheme.cardBackgroundColor,
             color: formTheme.textColor,
@@ -161,7 +268,7 @@ export default function PublicSubmitFormPage() {
                 setAnswers({});
                 setActivePageIndex(0);
               }}
-              className="px-5 py-2.5 rounded-xl text-xs font-extrabold text-white transition-all cursor-pointer shadow-md hover:opacity-90"
+              className="px-5 py-2.5 rounded-md text-xs font-extrabold text-white transition-all cursor-pointer shadow-md hover:opacity-90"
               style={{ backgroundColor: formTheme.accentColor }}
             >
               Submit Another Response
@@ -182,7 +289,7 @@ export default function PublicSubmitFormPage() {
     >
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-xl p-6 sm:p-10 rounded-3xl border shadow-2xl flex flex-col gap-6"
+        className="w-full max-w-xl p-6 sm:p-10 rounded-xl border shadow-2xl flex flex-col gap-6"
         style={{
           backgroundColor: formTheme.cardBackgroundColor,
           color: formTheme.textColor,
@@ -198,7 +305,7 @@ export default function PublicSubmitFormPage() {
             </p>
           )}
           {pages.length > 1 && (
-            <div className="inline-block mt-2 px-3 py-1 rounded-full text-[10px] font-extrabold bg-white/10 text-white">
+            <div className="inline-block mt-2 px-3 py-1 rounded-md text-[10px] font-extrabold bg-white/10 text-white">
               Page {activePageIndex + 1} of {pages.length}
             </div>
           )}
@@ -206,7 +313,7 @@ export default function PublicSubmitFormPage() {
 
         {/* Error Banner */}
         {submissionError && (
-          <div className="p-3.5 rounded-xl bg-red-500/20 text-red-200 border border-red-500/30 text-xs font-semibold flex items-center gap-2">
+          <div className="p-3.5 rounded-md bg-red-500/20 text-red-200 border border-red-500/30 text-xs font-semibold flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
             <span>{submissionError}</span>
           </div>
@@ -225,7 +332,7 @@ export default function PublicSubmitFormPage() {
               return (
                 <div
                   key={field.id || idx}
-                  className="space-y-2.5 p-4 rounded-2xl bg-white/5 border border-white/10"
+                  className="space-y-2.5 p-4 rounded-md bg-white/5 border border-white/10"
                 >
                   <label className="block text-xs sm:text-sm font-bold tracking-wide">
                     {field.label || `Question ${idx + 1}`}
@@ -244,7 +351,7 @@ export default function PublicSubmitFormPage() {
                       required={isReq}
                       onChange={(e) => handleFieldChange(field.id, e.target.value)}
                       placeholder={field.placeholder || "Type your response..."}
-                      className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-white/10 border border-white/20 focus:outline-none focus:border-emerald-400 transition-all"
+                      className="w-full px-3.5 py-2.5 text-xs rounded-md bg-white/10 border border-white/20 focus:outline-none focus:border-emerald-400 transition-all"
                     />
                   ) : fType === "multiple_choice" || fType === "dropdown" ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
@@ -255,8 +362,11 @@ export default function PublicSubmitFormPage() {
                             <button
                               key={oIdx}
                               type="button"
-                              onClick={() => handleFieldChange(field.id, opt)}
-                              className={`px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all text-left flex items-center justify-between cursor-pointer ${
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleFieldChange(field.id, opt);
+                              }}
+                              className={`px-3.5 py-2.5 rounded-md border text-xs font-bold transition-all text-left flex items-center justify-between cursor-pointer ${
                                 isSelected
                                   ? "bg-emerald-500/20 border-emerald-400 text-white"
                                   : "bg-white/5 border-white/15 hover:bg-white/10 text-white/80"
@@ -277,8 +387,11 @@ export default function PublicSubmitFormPage() {
                         <button
                           key={star}
                           type="button"
-                          onClick={() => handleFieldChange(field.id, star)}
-                          className={`p-2 rounded-xl transition-all cursor-pointer ${
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleFieldChange(field.id, star);
+                          }}
+                          className={`p-2 rounded-md transition-all cursor-pointer ${
                             Number(val) >= star
                               ? "bg-amber-400 text-slate-900 shadow-md scale-105"
                               : "bg-white/10 text-white/40 hover:bg-white/20"
@@ -307,7 +420,7 @@ export default function PublicSubmitFormPage() {
                       required={isReq}
                       onChange={(e) => handleFieldChange(field.id, e.target.value)}
                       placeholder={field.placeholder || "Your answer..."}
-                      className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-white/10 border border-white/20 focus:outline-none focus:border-emerald-400 transition-all"
+                      className="w-full px-3.5 py-2.5 text-xs rounded-md bg-white/10 border border-white/20 focus:outline-none focus:border-emerald-400 transition-all"
                     />
                   )}
                 </div>
@@ -322,8 +435,11 @@ export default function PublicSubmitFormPage() {
             <button
               type="button"
               disabled={activePageIndex === 0}
-              onClick={() => setActivePageIndex((p) => Math.max(0, p - 1))}
-              className="px-4 py-2 rounded-xl text-xs font-bold border border-white/20 text-white/80 disabled:opacity-30 flex items-center gap-1 hover:bg-white/10 transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                setActivePageIndex((p) => Math.max(0, p - 1));
+              }}
+              className="px-4 py-2 rounded-md text-xs font-bold border border-white/20 text-white/80 disabled:opacity-30 flex items-center gap-1 hover:bg-white/10 transition-colors"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
               <span>Previous</span>
@@ -333,9 +449,12 @@ export default function PublicSubmitFormPage() {
           {activePageIndex < pages.length - 1 ? (
             <button
               type="button"
-              onClick={() => setActivePageIndex((p) => Math.min(pages.length - 1, p + 1))}
+              onClick={(e) => {
+                e.preventDefault();
+                handleNextPage();
+              }}
               style={{ backgroundColor: formTheme.accentColor }}
-              className="ml-auto px-5 py-2.5 rounded-xl text-xs font-extrabold text-white flex items-center gap-1.5 hover:opacity-90 transition-all cursor-pointer shadow-md"
+              className="ml-auto px-5 py-2.5 rounded-md text-xs font-extrabold text-white flex items-center gap-1.5 hover:opacity-90 transition-all cursor-pointer shadow-md"
             >
               <span>Next Page</span>
               <ChevronRight className="w-4 h-4" />

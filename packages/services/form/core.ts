@@ -209,6 +209,28 @@ class FormService {
         throw apiErr.dataNotFound("Form not found.");
       }
 
+      // Fetch fields to validate required questions
+      const fields = await db
+        .select()
+        .from(formFieldsTable)
+        .where(eq(formFieldsTable.formId, formId))
+        .orderBy(formFieldsTable.orderIndex);
+
+      for (const field of fields) {
+        if (field.isRequired) {
+          const ans = answers.find((a) => a.fieldId === field.id);
+          const val = ans?.value;
+          if (
+            ans === undefined ||
+            val === undefined ||
+            val === null ||
+            (typeof val === "string" && val.trim() === "")
+          ) {
+            throw apiErr.badRequest(`Field "${field.label}" is required and cannot be empty.`);
+          }
+        }
+      }
+
       const [submission] = await db
         .insert(formSubmissionsTable)
         .values({
