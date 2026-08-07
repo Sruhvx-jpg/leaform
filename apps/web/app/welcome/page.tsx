@@ -20,6 +20,7 @@ import {
   Check,
   Eye,
   EyeOff,
+  Loader2,
 } from "lucide-react";
 import { useSignup, useLogin } from "~/hooks";
 
@@ -45,6 +46,46 @@ export default function WelcomePage() {
   const { login, isLoading: isLoginLoading, reset: resetLogin } = useLogin();
 
   const isLoading = isSignupLoading || isLoginLoading;
+
+  // Staged loading animation states
+  const [authStage, setAuthStage] = useState<number | null>(null);
+  const [authSuccessData, setAuthSuccessData] = useState<any | null>(null);
+
+  const signupStages = [
+    "Validating account details...",
+    "Encrypting secure credentials...",
+    "Provisioning workspace profile...",
+  ];
+
+  const loginStages = [
+    "Verifying authentication keys...",
+    "Checking security credentials...",
+    "Synchronizing workspace records...",
+  ];
+
+  useEffect(() => {
+    if (authStage === null) return;
+    if (authStage >= 3) {
+      if (authSuccessData) {
+        setSuccessMessage(
+          mode === "signup"
+            ? `Welcome, ${authSuccessData.fullName}! Account created successfully.`
+            : `Welcome back, ${authSuccessData.fullName}!`
+        );
+        const redirectTimer = setTimeout(() => {
+          router.push("/getstarted");
+        }, 800);
+        return () => clearTimeout(redirectTimer);
+      }
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setAuthStage((s) => (s !== null ? s + 1 : null));
+    }, 700);
+
+    return () => clearTimeout(timer);
+  }, [authStage, authSuccessData, mode, router]);
 
   const slides = [
     {
@@ -181,9 +222,10 @@ export default function WelcomePage() {
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
+    setAuthSuccessData(null);
 
     const cleanEmail = email.trim();
-    const cleanPassword = password.trim();
+    const cleanPassword = password;
 
     if (!cleanEmail) {
       setErrorMessage("Please enter your email address");
@@ -204,45 +246,32 @@ export default function WelcomePage() {
           setErrorMessage("Please choose a stronger password before continuing");
           return;
         }
-        const res = await signup({
-          fullName: fullName.trim(),
-          email: cleanEmail,
-          password: cleanPassword,
-        });
-        if (typeof window !== "undefined") {
-          localStorage.setItem("user", JSON.stringify(res));
-        }
-        setSuccessMessage(`Welcome, ${res.fullName}! Account created successfully.`);
-        setTimeout(() => {
-          router.push("/getstarted");
-        }, 1200);
-      } else {
-        const res = await login({ email: cleanEmail, password: cleanPassword });
-        if (typeof window !== "undefined") {
-          localStorage.setItem("user", JSON.stringify(res));
-        }
-        setSuccessMessage(`Welcome back, ${res.fullName}!`);
-        setTimeout(() => {
-          router.push("/getstarted");
-        }, 1200);
       }
-    } catch (err: unknown) {
-      let msg = err instanceof Error ? err.message : "An unexpected error occurred";
-      // Clean up template prefixes or raw internal stack traces
-      msg =
-        msg
-          .replace(/UNKNOWN ERROR: \+\+.*?Wait.*?\+\+/gi, "")
-          .replace(/UNAUTHORIZED ACCESS: \+\+.*?Wait.*?\+\+/gi, "")
-          .trim() || msg;
 
-      if (
-        msg.includes("UserService") ||
-        msg.includes("Failed query") ||
-        msg.includes("DrizzleQueryError") ||
-        msg.includes("insert into") ||
-        msg.includes("storeRefreshTokenInDB") ||
-        msg.includes("SQL")
-      ) {
+      // Start staged loading animation
+      setAuthStage(0);
+
+      // Execute signup or login promise
+      const authPromise = mode === "signup"
+        ? signup({ fullName: fullName.trim(), email: cleanEmail, password: cleanPassword })
+        : login({ email: cleanEmail, password: cleanPassword });
+
+      // Run concurrently with a minimum duration of 2.1 seconds for loading animation
+      const [res] = await Promise.all([
+        authPromise,
+        new Promise((resolve) => setTimeout(resolve, 2100)),
+      ]);
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("user", JSON.stringify(res));
+      }
+
+      setAuthSuccessData(res);
+    } catch (err: unknown) {
+      setAuthStage(null); // Reset loader on error
+      let msg = err instanceof Error ? err.message : "An unexpected error occurred";
+      msg = msg.replace(/UNKNOWN ERROR: \+\+.*?Wait.*?\+\+/gi, "").replace(/UNAUTHORIZED ACCESS: \+\+.*?Wait.*?\+\+/gi, "").trim() || msg;
+      if (msg.includes("UserService") || msg.includes("Failed query") || msg.includes("DrizzleQueryError") || msg.includes("insert into") || msg.includes("storeRefreshTokenInDB") || msg.includes("SQL")) {
         msg = "An unexpected error occurred. Please try again.";
       }
       setErrorMessage(msg);
@@ -454,8 +483,8 @@ export default function WelcomePage() {
         </div>
       </div>
 
-      {/* RIGHT PANEL: Clean White Background Typeform Style Auth Panel */}
-      <div className="order-1 lg:order-2 flex flex-col justify-between p-5 sm:p-10 lg:p-12 bg-white text-slate-900 min-h-screen w-full overflow-y-auto">
+      {/* RIGHT PANEL: Clean Background Typeform Style Auth Panel */}
+      <div className="order-1 lg:order-2 flex flex-col justify-between p-5 sm:p-10 lg:p-12 bg-[#f4faf7]/60 text-slate-900 min-h-screen w-full overflow-y-auto">
         {/* Top Header Bar */}
         <div className="w-full flex justify-end items-center mb-6 sm:mb-8">
           <div className="flex items-center gap-1.5 text-xs text-slate-600 border border-slate-200 px-3 py-1.5 rounded-full cursor-pointer hover:border-slate-300 bg-slate-50/50">
@@ -465,209 +494,289 @@ export default function WelcomePage() {
           </div>
         </div>
 
-        {/* Center Auth Form Box */}
-        <div className="w-full max-w-sm mx-auto flex flex-col items-center my-auto py-2">
-          {/* Logo & Headline */}
-          <div className="flex flex-col items-center text-center mb-6 sm:mb-8">
-            <div className="relative w-12 sm:w-14 h-12 sm:h-14 rounded-full overflow-hidden shadow-md mb-3 border border-slate-100">
-              <Image
-                src="/leafform_logo.png"
-                alt="LeafForm Logo"
-                fill
-                className="object-cover scale-105"
-                priority
-              />
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-              LeafForm
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1.5 sm:mt-2 max-w-xs leading-relaxed">
-              Get better data with conversational forms, surveys, quizzes and more.
-            </p>
+        {/* Center Auth Form Box with Leaf Backdrop */}
+        <div className="relative w-full max-w-[420px] mx-auto my-auto py-6">
+          {/* Decorative Leaf backdrop in the top right */}
+          <div className="absolute -top-10 -right-10 w-28 h-28 text-emerald-800/10 pointer-events-none z-0 transform rotate-12 select-none">
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+              <path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.58,20.19C7.09,20.38 7.62,20.5 8.17,20.5C14.14,20.5 18,17.47 20,13C22.42,7.57 20,3 20,3C20,3 15.5,1.58 10.1,4C5.59,6 2.5,9.88 2.5,15.83C2.5,16.38 2.62,16.91 2.81,17.42L1,19.23L1.77,21L3,19.77C5.09,14.6 7.61,8.4 17,8Z" />
+            </svg>
           </div>
 
-          {/* Error Alert */}
-          {errorMessage && (
-            <div className="w-full mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-medium flex items-center gap-2 animate-fadeIn">
-              <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
-
-          {/* Success Alert */}
-          {successMessage && (
-            <div className="w-full mb-4 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium flex items-center gap-2 animate-fadeIn">
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-              <span>{successMessage}</span>
-            </div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
-            {/* Full Name Input (Appears in Sign Up mode) */}
-            <div
-              aria-hidden={mode !== "signup"}
-              className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                mode === "signup"
-                  ? "max-h-24 opacity-100 transform translate-y-0"
-                  : "max-h-0 opacity-0 pointer-events-none transform -translate-y-2"
-              }`}
-            >
-              <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1.5">
-                <User className="w-3.5 h-3.5 text-slate-500" />
-                <span>Full Name</span>
-              </label>
-              <input
-                type="text"
-                placeholder="Alex Rivers"
-                value={fullName}
-                tabIndex={mode === "signup" ? 0 : -1}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:bg-white transition-all shadow-sm"
-                required={mode === "signup"}
-              />
-            </div>
-
-            {/* Email Input */}
-            <div>
-              <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1.5">
-                <Mail className="w-3.5 h-3.5 text-slate-500" />
-                <span>Email Address</span>
-              </label>
-              <input
-                type="email"
-                placeholder="alex@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:bg-white transition-all shadow-sm"
-                required
-              />
-            </div>
-
-            {/* Password Input with Show/Hide Toggle */}
-            <div>
-              <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1.5">
-                <Lock className="w-3.5 h-3.5 text-slate-500" />
-                <span>Password</span>
-              </label>
-              <div className="relative w-full flex items-center">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-11 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:bg-white transition-all shadow-sm"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 text-slate-400 hover:text-slate-700 transition-colors p-1 cursor-pointer"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            {/* Password Strength Indicator (Sign Up Mode Only) - Smooth In/Out Animation */}
-            <div
-              aria-hidden={!showPasswordStrength}
-              className={`w-full transition-all duration-500 ease-in-out overflow-hidden ${
-                showPasswordStrength
-                  ? "max-h-64 opacity-100 scale-100 translate-y-0 my-0.5"
-                  : "max-h-0 opacity-0 scale-95 -translate-y-2 my-0 pointer-events-none"
-              }`}
-            >
-              <div className="w-full bg-slate-50/90 border border-slate-200/80 rounded-xl p-3.5 flex flex-col gap-2.5 shadow-sm">
-                {/* Score Bar & Label */}
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500 font-medium">Password Strength:</span>
-                  <span
-                    className={`font-bold transition-colors duration-300 ${passwordStrength.textColor}`}
-                  >
-                    {passwordStrength.label}
-                  </span>
+          {/* White Card Container */}
+          <div className="relative w-full bg-white border border-slate-200/80 p-6 sm:p-8 rounded-xl shadow-2xl shadow-slate-200/50 z-10 flex flex-col items-center min-h-[360px] justify-center">
+            {authStage !== null ? (
+              <div className="w-full py-8 flex flex-col items-center justify-center animate-welcome-fade text-center">
+                {/* Spinning glowing outer rings */}
+                <div className="relative w-20 h-20 mb-6 flex items-center justify-center">
+                  <div className="absolute inset-0 rounded-full border-4 border-emerald-950/10" />
+                  <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
+                  <div className="absolute w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 shadow-inner">
+                    <User className="w-6 h-6 animate-pulse" />
+                  </div>
                 </div>
 
-                {/* Segmented Progress Meter */}
-                <div className="grid grid-cols-4 gap-1.5 w-full">
-                  {[1, 2, 3, 4].map((step) => (
-                    <div
-                      key={step}
-                      className={`h-1.5 rounded-full transition-all duration-500 ${
-                        step <= passwordStrength.score ? passwordStrength.color : "bg-slate-200"
-                      }`}
-                    />
-                  ))}
+                <div className="space-y-1 mb-6">
+                  <h3 className="text-base font-extrabold text-[#0d5c41] tracking-wide">
+                    {mode === "signup" ? "Creating Your Account" : "Authenticating Session"}
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                    LeafForm Secure Access
+                  </p>
                 </div>
 
-                {/* Criteria Checklist */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1 border-t border-slate-200/60 text-[11px]">
-                  {passwordStrength.checks.map((check, idx) => (
-                    <div
-                      key={idx}
-                      className={`flex items-center gap-1.5 transition-colors duration-300 ${
-                        check.met ? "text-emerald-700 font-medium" : "text-slate-400"
-                      }`}
-                    >
-                      {check.met ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 transition-transform duration-300 scale-110" />
-                      ) : (
-                        <div className="w-3.5 h-3.5 rounded-full border border-slate-300 shrink-0 flex items-center justify-center text-[8px] text-slate-400">
-                          ○
+                {/* Staged checklist */}
+                <div className="w-full max-w-[280px] space-y-3.5 mb-6 text-left">
+                  {(mode === "signup" ? signupStages : loginStages).map((stageText, idx) => {
+                    const isCompleted = authStage > idx;
+                    const isActive = authStage === idx;
+
+                    return (
+                      <div
+                        key={idx}
+                        className={`flex items-center gap-3 transition-all duration-300 ${
+                          isActive ? "scale-[1.02] translate-x-1" : ""
+                        }`}
+                      >
+                        <div className="flex-shrink-0">
+                          {isCompleted ? (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500 drop-shadow-[0_0_4px_rgba(16,185,129,0.3)]" />
+                          ) : isActive ? (
+                            <Loader2 className="w-4 h-4 text-emerald-600 animate-spin" />
+                          ) : (
+                            <div className="w-4 h-4 rounded-full border-2 border-slate-200 bg-slate-50" />
+                          )}
                         </div>
-                      )}
-                      <span>{check.label}</span>
-                    </div>
-                  ))}
+                        <span
+                          className={`text-xs font-bold transition-colors duration-300 ${
+                            isActive
+                              ? "text-slate-800 font-extrabold"
+                              : isCompleted
+                              ? "text-emerald-600/70 line-through decoration-emerald-800/10"
+                              : "text-slate-400/50"
+                          }`}
+                        >
+                          {stageText}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Progress bar */}
+                <div className="w-full max-w-[280px] bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200/50">
+                  <div
+                    className="bg-[#0d5c41] h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_6px_rgba(13,92,65,0.3)]"
+                    style={{ width: `${Math.min(((authStage + 1) / 3) * 100, 100)}%` }}
+                  />
                 </div>
               </div>
-            </div>
-
-            {/* Mode Switch Text below Password / Strength Meter */}
-            <div className="flex items-center justify-center gap-1.5 text-xs text-slate-500 pt-1">
-              <span>
-                {mode === "signup" ? "Already have an account?" : "Don't have an account?"}
-              </span>
-              <button
-                type="button"
-                onClick={() => handleModeChange(mode === "signup" ? "login" : "signup")}
-                className="text-slate-900 font-semibold underline underline-offset-2 hover:text-emerald-700 transition-colors cursor-pointer"
-              >
-                {mode === "signup" ? "Log in" : "Sign up"}
-              </button>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full mt-1 py-3.5 px-4 rounded-xl bg-[#373036] hover:bg-[#252024] active:bg-[#181518] disabled:opacity-50 text-white font-semibold text-sm shadow-md transition-all duration-200 flex justify-center items-center gap-2 cursor-pointer"
-            >
-              {isLoading ? (
-                <>
-                  <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
+            ) : (
+              <>
+                {/* Logo & Headline */}
+                <div className="flex flex-col items-center text-center mb-6 sm:mb-8">
+                  <div className="relative w-12 sm:w-14 h-12 sm:h-14 rounded-full overflow-hidden shadow-md mb-3 border border-slate-100">
+                    <Image
+                      src="/leafform_logo.png"
+                      alt="LeafForm Logo"
+                      fill
+                      className="object-cover scale-105"
+                      priority
                     />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
-                  <span>Processing...</span>
-                </>
-              ) : (
-                <>
-                  <span>{mode === "signup" ? "Sign up with email" : "Log in with email"}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </form>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+                    LeafForm
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-500 mt-1.5 sm:mt-2 max-w-xs leading-relaxed">
+                    Get better data with conversational forms, surveys, quizzes and more.
+                  </p>
+                </div>
+
+                {/* Error Alert */}
+                {errorMessage && (
+                  <div className="w-full mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-medium flex items-center gap-2 animate-fadeIn">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+
+                {/* Success Alert */}
+                {successMessage && (
+                  <div className="w-full mb-4 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium flex items-center gap-2 animate-fadeIn">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                    <span>{successMessage}</span>
+                  </div>
+                )}
+
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
+                  {/* Full Name Input (Appears in Sign Up mode) */}
+                  <div
+                    aria-hidden={mode !== "signup"}
+                    className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                      mode === "signup"
+                        ? "max-h-24 opacity-100 transform translate-y-0"
+                        : "max-h-0 opacity-0 pointer-events-none transform -translate-y-2"
+                    }`}
+                  >
+                    <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1.5">
+                      <User className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Full Name</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Alex Rivers"
+                      value={fullName}
+                      tabIndex={mode === "signup" ? 0 : -1}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:bg-white transition-all shadow-sm"
+                      required={mode === "signup"}
+                    />
+                  </div>
+
+                  {/* Email Input */}
+                  <div>
+                    <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1.5">
+                      <Mail className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Email Address</span>
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="alex@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:bg-white transition-all shadow-sm"
+                      required
+                    />
+                  </div>
+
+                  {/* Password Input with Show/Hide Toggle */}
+                  <div>
+                    <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1.5">
+                      <Lock className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Password</span>
+                    </label>
+                    <div className="relative w-full flex items-center">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-4 py-3 pr-11 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:bg-white transition-all shadow-sm"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 text-slate-400 hover:text-slate-700 transition-colors p-1 cursor-pointer"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Password Strength Indicator (Sign Up Mode Only) - Smooth In/Out Animation */}
+                  <div
+                    aria-hidden={!showPasswordStrength}
+                    className={`w-full transition-all duration-500 ease-in-out overflow-hidden ${
+                      showPasswordStrength
+                        ? "max-h-64 opacity-100 scale-100 translate-y-0 my-0.5"
+                        : "max-h-0 opacity-0 scale-95 -translate-y-2 my-0 pointer-events-none"
+                    }`}
+                  >
+                    <div className="w-full bg-slate-50/90 border border-slate-200/80 rounded-xl p-3.5 flex flex-col gap-2.5 shadow-sm">
+                      {/* Score Bar & Label */}
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-500 font-medium">Password Strength:</span>
+                        <span
+                          className={`font-bold transition-colors duration-300 ${passwordStrength.textColor}`}
+                        >
+                          {passwordStrength.label}
+                        </span>
+                      </div>
+
+                      {/* Segmented Progress Meter */}
+                      <div className="grid grid-cols-4 gap-1.5 w-full">
+                        {[1, 2, 3, 4].map((step) => (
+                          <div
+                            key={step}
+                            className={`h-1.5 rounded-full transition-all duration-500 ${
+                              step <= passwordStrength.score ? passwordStrength.color : "bg-slate-200"
+                            }`}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Criteria Checklist */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1 border-t border-slate-200/60 text-[11px]">
+                        {passwordStrength.checks.map((check, idx) => (
+                          <div
+                            key={idx}
+                            className={`flex items-center gap-1.5 transition-colors duration-300 ${
+                              check.met ? "text-emerald-700 font-medium" : "text-slate-400"
+                            }`}
+                          >
+                            {check.met ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 transition-transform duration-300 scale-110" />
+                            ) : (
+                              <div className="w-3.5 h-3.5 rounded-full border border-slate-300 shrink-0 flex items-center justify-center text-[8px] text-slate-400">
+                                ○
+                              </div>
+                            )}
+                            <span>{check.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mode Switch Text below Password / Strength Meter */}
+                  <div className="flex items-center justify-center gap-1.5 text-xs text-slate-500 pt-1">
+                    <span>
+                      {mode === "signup" ? "Already have an account?" : "Don't have an account?"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleModeChange(mode === "signup" ? "login" : "signup")}
+                      className="text-slate-900 font-semibold underline underline-offset-2 hover:text-emerald-700 transition-colors cursor-pointer"
+                    >
+                      {mode === "signup" ? "Log in" : "Sign up"}
+                    </button>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full mt-1 py-3.5 px-4 rounded-xl bg-[#373036] hover:bg-[#252024] active:bg-[#181518] disabled:opacity-50 text-white font-semibold text-sm shadow-md transition-all duration-200 flex justify-center items-center gap-2 cursor-pointer"
+                  >
+                    {isLoading ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                        </svg>
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>{mode === "signup" ? "Sign up with email" : "Log in with email"}</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Bottom Footer Links */}
