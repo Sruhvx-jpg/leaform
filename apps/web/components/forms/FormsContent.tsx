@@ -22,16 +22,15 @@ import {
 import { trpc } from "~/trpc/client";
 import { toast } from "sonner";
 import { AlertCircle, UserPlus } from "lucide-react";
+import { CreateFormButton, ExploreTemplatesButton } from "~/components/ui/custom-buttons";
 
 interface FormsContentProps {
-  activeSubTab: "create" | "myforms";
-  setActiveSubTab: (tab: "create" | "myforms") => void;
   workspaceId: string;
   isReadOnly: boolean;
   onInviteTeam?: () => void;
 }
 
-export function FormsContent({ activeSubTab, setActiveSubTab, workspaceId, isReadOnly, onInviteTeam }: FormsContentProps) {
+export function FormsContent({ workspaceId, isReadOnly, onInviteTeam }: FormsContentProps) {
   const router = useRouter();
   const [copiedFormId, setCopiedFormId] = useState<string | null>(null);
   const [deletingFormId, setDeletingFormId] = useState<string | null>(null);
@@ -40,6 +39,7 @@ export function FormsContent({ activeSubTab, setActiveSubTab, workspaceId, isRea
   // Expanded analytics state
   const [expandedFormId, setExpandedFormId] = useState<string | null>(null);
   const [activeAnalyticsTab, setActiveAnalyticsTab] = useState<"analytics" | "responses">("analytics");
+  const [showTemplates, setShowTemplates] = useState(false);
 
   const utils = trpc.useUtils();
 
@@ -127,166 +127,122 @@ export function FormsContent({ activeSubTab, setActiveSubTab, workspaceId, isRea
 
   return (
     <div className="w-full flex flex-col gap-6 select-none">
-      {/* Tab 1: Create Tab */}
-      {activeSubTab === "create" && (
-        <div className="w-full flex flex-col gap-6">
-          {/* Start Blank Form Card */}
-          <div
+      <div className="flex items-center justify-end">
+        {!hasNoForms && !isLoading && (
+          <button
+            type="button"
             onClick={() => {
               if (isReadOnly) {
-                toast.error("Unauthorized: Read-only access to workspace.");
+                toast.error("Unauthorized: Read-only access");
               } else {
                 router.push(`/buildform?workspaceId=${workspaceId}`);
               }
             }}
-            className="w-full p-8 rounded-xl bg-gradient-to-r from-[#092218] via-[#0e2c20] to-[#081a13] text-white border border-[#134e3b] shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 hover:shadow-2xl transition-all cursor-pointer group"
+            className="px-4 py-2 bg-[#16a34a] hover:bg-[#15803d] text-white font-bold text-xs flex items-center gap-1.5 rounded-lg active:scale-95 transition-all shadow-md cursor-pointer"
           >
-            <div className="space-y-2 max-w-xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-extrabold border border-emerald-500/30">
-                <Plus className="w-3.5 h-3.5" />
-                <span>Blank Builder</span>
-              </div>
-              <h2 className="text-2xl font-black tracking-tight text-white transition-colors">
-                Build a New Form from Scratch
-              </h2>
-              <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                Start with a blank canvas. Drag and drop input fields, customize colors, fonts,
-                styles, and set up multi-page logic flows.
-              </p>
-            </div>
+            <Plus className="w-3.5 h-3.5" />
+            <span>Create Form</span>
+          </button>
+        )}
+      </div>
 
-             <button
-              type="button"
-              className="px-6 py-3.5 rounded-md bg-white text-[#092218] font-extrabold text-xs flex items-center gap-2 group-hover:bg-[#16a34a] group-hover:text-white active:scale-95 transition-all shadow-md shrink-0 cursor-pointer"
+      {isLoading ? (
+        /* Skeletal Loading Grid */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div
+              key={i}
+              className="p-6 rounded-xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between min-h-[220px] animate-pulse"
             >
-              <span>Start Building</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+              <div className="space-y-3">
+                <div className="h-6 bg-slate-200 rounded-md w-3/4" />
+                <div className="h-3.5 bg-slate-100 rounded w-full" />
+                <div className="h-3.5 bg-slate-100 rounded w-1/2" />
+              </div>
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                <div className="h-6 w-20 bg-slate-200 rounded-full" />
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-md bg-slate-100" />
+                  <div className="w-8 h-8 rounded-md bg-slate-100" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : hasNoForms ? (
+        <div className="w-full flex flex-col gap-8">
+          <div className="w-full max-w-2xl mx-auto p-8 rounded-xl bg-white border border-slate-200 shadow-xl flex flex-col items-center text-center gap-6">
+            <div className="w-16 h-16 rounded-full bg-emerald-50 text-[#16a34a] border border-emerald-100 flex items-center justify-center shadow-md">
+              <Plus className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-black text-slate-900">Create your first form</h3>
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full justify-center">
+              <CreateFormButton
+                onClick={() => {
+                  if (isReadOnly) {
+                    toast.error("Unauthorized: Read-only access to workspace.");
+                  } else {
+                    router.push(`/buildform?workspaceId=${workspaceId}`);
+                  }
+                }}
+              />
+              <ExploreTemplatesButton
+                onClick={() => setShowTemplates(!showTemplates)}
+              />
+            </div>
           </div>
 
-          {/* Pre-made Layouts Grid */}
-          <div className="space-y-4 pt-2">
-            <div className="flex items-center justify-between">
+          {showTemplates && (
+            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-neutral-900 animate-fadeIn">
               <div>
                 <h3 className="font-bold text-slate-900 dark:text-white text-lg">Pre-made Form Layouts</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-300">
                   Pick a pre-configured template to jumpstart your form design.
                 </p>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {preMadeLayouts.map((layout) => {
-                const IconComponent = layout.icon;
-                return (
-                   <div
-                    key={layout.id}
-                    onClick={() => {
-                      if (isReadOnly) {
-                        toast.error("Unauthorized: Read-only access to workspace.");
-                      } else {
-                        router.push(`/buildform?workspaceId=${workspaceId}`);
-                      }
-                    }}
-                    className="p-5 rounded-xl bg-white border border-slate-200 hover:border-[#16a34a] hover:-translate-y-0.5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-4 cursor-pointer group text-slate-900"
-                  >
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="w-10 h-10 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-[#16a34a] dark:text-emerald-400 flex items-center justify-center font-bold shadow-xs">
-                          <IconComponent className="w-5 h-5" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {preMadeLayouts.map((layout) => {
+                  const IconComponent = layout.icon;
+                  return (
+                    <div
+                      key={layout.id}
+                      onClick={() => {
+                        if (isReadOnly) {
+                          toast.error("Unauthorized: Read-only access to workspace.");
+                        } else {
+                          router.push(`/buildform?workspaceId=${workspaceId}`);
+                        }
+                      }}
+                      className="p-5 rounded-xl bg-white border border-slate-200 hover:border-[#16a34a] hover:-translate-y-0.5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-4 cursor-pointer group text-slate-900"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="w-10 h-10 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-[#16a34a] dark:text-emerald-400 flex items-center justify-center font-bold shadow-xs">
+                            <IconComponent className="w-5 h-5" />
+                          </div>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-emerald-950/50 text-slate-600 dark:text-slate-300">
+                            {layout.badge}
+                          </span>
                         </div>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-emerald-950/50 text-slate-600 dark:text-slate-300">
-                          {layout.badge}
-                        </span>
+
+                        <h3 className="font-bold text-slate-900 dark:text-white text-base group-hover:text-emerald-800 dark:group-hover:text-emerald-300 transition-colors">
+                          {layout.title}
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-300 leading-relaxed">{layout.description}</p>
                       </div>
 
-                      <h3 className="font-bold text-slate-900 dark:text-white text-base group-hover:text-emerald-800 dark:group-hover:text-emerald-300 transition-colors">
-                        {layout.title}
-                      </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-300 leading-relaxed">{layout.description}</p>
+                      <div className="flex items-center gap-1 text-xs font-semibold text-[#16a34a] pt-4 group-hover:gap-2 transition-all">
+                        <span>Use Template</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </div>
                     </div>
-
-                    <div className="flex items-center gap-1 text-xs font-semibold text-[#16a34a] pt-4 group-hover:gap-2 transition-all">
-                      <span>Use Template</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
         </div>
-      )}
-
-      {/* Tab 2: My Forms Tab */}
-      {activeSubTab === "myforms" && (
-        <div className="w-full flex flex-col gap-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">My Forms</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-300 mt-0.5">All forms created by your account.</p>
-            </div>
-          </div>
-
-          {isLoading ? (
-            /* Skeletal Loading Grid */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div
-                  key={i}
-                  className="p-6 rounded-xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between min-h-[220px] animate-pulse"
-                >
-                  <div className="space-y-3">
-                    <div className="h-6 bg-slate-200 rounded-md w-3/4" />
-                    <div className="h-3.5 bg-slate-100 rounded w-full" />
-                    <div className="h-3.5 bg-slate-100 rounded w-1/2" />
-                  </div>
-                  <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                    <div className="h-6 w-20 bg-slate-200 rounded-full" />
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-md bg-slate-100" />
-                      <div className="w-8 h-8 rounded-md bg-slate-100" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : hasNoForms ? (
-            <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-[#0e0e0e] rounded-xl border border-slate-100 dark:border-neutral-800 text-center gap-4 min-h-[300px] shadow-sm">
-              <div className="w-12 h-12 rounded-full border border-slate-200 text-slate-400 flex items-center justify-center">
-                <AlertCircle className="w-6 h-6" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-slate-700 font-medium text-base">No forms created in this workspace yet.</h3>
-                <p className="text-xs text-slate-400 font-medium">What would you like to do?</p>
-              </div>
-              <div className="flex items-center gap-3 mt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (isReadOnly) {
-                      toast.error("Unauthorized: Read-only access");
-                    } else {
-                      router.push(`/buildform?workspaceId=${workspaceId}`);
-                    }
-                  }}
-                  className="px-4 py-2 border-2 border-slate-900 rounded-lg bg-white text-slate-800 font-bold text-xs flex items-center gap-1.5 hover:bg-slate-50 shadow-[2px_2px_0px_0px_#000] cursor-pointer"
-                  style={{ borderRadius: "10px 4px 8px 3px/3px 8px 3px 10px" }}
-                >
-                  <Plus className="w-3.5 h-3.5 text-[#16a34a]" />
-                  <span>Create Form</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={onInviteTeam}
-                  className="px-4 py-2 border-2 border-slate-900 rounded-lg bg-white text-slate-800 font-bold text-xs flex items-center gap-1.5 hover:bg-slate-50 shadow-[2px_2px_0px_0px_#000] cursor-pointer"
-                  style={{ borderRadius: "10px 4px 8px 3px/3px 8px 3px 10px" }}
-                >
-                  <UserPlus className="w-3.5 h-3.5 text-[#16a34a]" />
-                  <span>Invite Team</span>
-                </button>
-              </div>
-            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {Array.isArray(data) &&
@@ -555,8 +511,6 @@ export function FormsContent({ activeSubTab, setActiveSubTab, workspaceId, isRea
                 ))}
             </div>
           )}
-        </div>
-      )}
 
       {/* Delete Confirmation Modal Card */}
       {formToDelete && (

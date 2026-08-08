@@ -3,12 +3,11 @@
 import { useEffect, useState, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { trpc } from "~/trpc/client";
 import {
   PanelLeftClose,
   PanelLeftOpen,
-  LayoutDashboard,
   FileText,
   Menu,
   X,
@@ -17,13 +16,13 @@ import {
   Plus,
   Sun,
   Moon,
+  Loader2,
 } from "lucide-react";
 import { useTheme } from "~/providers/global";
-import { GetStartedContent } from "~/components/getstarted/GetStartedContent";
 import { FormsContent } from "~/components/forms/FormsContent";
 import { DefaultBackground } from "~/components/background/DefaultBackground";
 import { useWorkspace } from "~/providers/workspace";
-import { Folder, ChevronDown, Copy, Users, Check, Shield, UserPlus } from "lucide-react";
+import { Folder, ChevronDown, ChevronRight, Copy, Users, Check, Shield, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 export default function GetStartedPage() {
@@ -39,11 +38,18 @@ function GetStartedPageContent() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"create" | "dashboard" | "myforms">("create");
+  const [isFormsDropdownOpen, setIsFormsDropdownOpen] = useState(false);
 
   // Workspace states
   const { workspaces, activeWorkspace, setActiveWorkspace, refetchWorkspaces } = useWorkspace();
+
+  // Query workspace forms for sidebar dropdown
+  const { data: forms, isLoading: isLoadingForms } = trpc.form.getUserForms.useQuery(
+    { workspaceId: activeWorkspace?.id ?? "" },
+    { enabled: !!activeWorkspace?.id, retry: false }
+  );
   const [showWorkspaceDropdown, setShowWorkspaceDropdown] = useState(false);
   const [showCreateWorkspaceModal, setShowCreateWorkspaceModal] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
@@ -257,7 +263,7 @@ function GetStartedPageContent() {
           {/* Desktop Retract Toggle Button */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="hidden md:flex p-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-neutral-950/30 text-[#16a34a] dark:text-neutral-400 hover:text-[#065f46] dark:hover:text-white transition-colors flex-shrink-0 cursor-pointer"
+            className="hidden md:flex p-1.5 rounded-lg hover:bg-[#F2EADF]/60 dark:hover:bg-neutral-950/30 text-[#0d5c41] dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors flex-shrink-0 cursor-pointer"
             title={isCollapsed ? "Expand sidebar" : "Retract sidebar"}
             aria-label={isCollapsed ? "Expand sidebar" : "Retract sidebar"}
           >
@@ -271,7 +277,7 @@ function GetStartedPageContent() {
           {/* Mobile Close Button */}
           <button
             onClick={() => setIsMobileOpen(false)}
-            className="md:hidden p-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-neutral-950/30 text-[#16a34a] dark:text-neutral-400 hover:text-[#065f46] dark:hover:text-white transition-colors flex-shrink-0 cursor-pointer"
+            className="md:hidden p-1.5 rounded-lg hover:bg-[#F2EADF]/60 dark:hover:bg-neutral-950/30 text-[#0d5c41] dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors flex-shrink-0 cursor-pointer"
             aria-label="Close mobile menu"
           >
             <X className="w-5 h-5" />
@@ -283,71 +289,72 @@ function GetStartedPageContent() {
 
         {/* Navigation Options */}
         <nav className="flex flex-col gap-2">
+          {/* Create Button */}
           <button
             type="button"
             onClick={() => {
-              setActiveTab("create");
-              setIsMobileOpen(false);
+              if (activeWorkspace) {
+                router.push(`/getstarted?workspaceId=${activeWorkspace.id}`);
+              }
             }}
-            className={`flex items-center gap-3 px-3 py-2.5 transition-all w-full text-left cursor-pointer border-2 ${
-              isCollapsed ? "md:justify-center" : ""
-            } ${
-              activeTab === "create"
-                ? "bg-[#16a34a] text-white font-extrabold border-slate-900 shadow-[2px_2px_0px_0px_#000]"
-                : "text-emerald-800 hover:text-[#16a34a] border-transparent font-medium"
-            }`}
+            className="flex items-center gap-3 px-3 py-2.5 transition-all w-full text-left border-2 bg-[#16a34a] text-white font-extrabold border-slate-900 shadow-[2px_2px_0px_0px_#000] cursor-pointer"
             style={{ borderRadius: "10px 4px 8px 3px/3px 8px 3px 10px" }}
-            title="Create"
+            title="Forms Dashboard"
           >
-            <Plus className="w-5 h-5 flex-shrink-0" />
+            <Plus className="w-5 h-5 flex-shrink-0 text-white" />
             {(!isCollapsed || isMobileOpen) && (
               <span className="text-sm whitespace-nowrap">Create</span>
             )}
           </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab("dashboard");
-              setIsMobileOpen(false);
-            }}
-            className={`flex items-center gap-3 px-3 py-2.5 transition-all w-full text-left cursor-pointer border-2 ${
-              isCollapsed ? "md:justify-center" : ""
-            } ${
-              activeTab === "dashboard"
-                ? "bg-[#16a34a] text-white font-extrabold border-slate-900 shadow-[2px_2px_0px_0px_#000]"
-                : "text-emerald-800 hover:text-[#16a34a] border-transparent font-medium"
-            }`}
-            style={{ borderRadius: "10px 4px 8px 3px/3px 8px 3px 10px" }}
-            title="Dashboard"
-          >
-            <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
-            {(!isCollapsed || isMobileOpen) && (
-              <span className="text-sm whitespace-nowrap">Dashboard</span>
-            )}
-          </button>
+          {/* My Forms Dropdown */}
+          <div className="flex flex-col gap-1 w-full">
+            <button
+              type="button"
+              onClick={() => setIsFormsDropdownOpen(!isFormsDropdownOpen)}
+              className="flex items-center justify-between px-3 py-2.5 transition-all w-full text-left border-2 border-transparent hover:border-slate-900 text-slate-900 hover:text-black hover:bg-[#F2EADF]/60 font-bold cursor-pointer"
+              style={{ borderRadius: "10px 4px 8px 3px/3px 8px 3px 10px" }}
+              title="My Forms"
+            >
+              <div className="flex items-center gap-3">
+                <FileText className="w-5 h-5 flex-shrink-0 text-[#0d5c41]" />
+                {(!isCollapsed || isMobileOpen) && (
+                  <span className="text-sm whitespace-nowrap">My Forms</span>
+                )}
+              </div>
+              {(!isCollapsed || isMobileOpen) && (
+                <ChevronRight className={`w-4 h-4 text-slate-500 transition-transform duration-300 ease-in-out transform ${isFormsDropdownOpen ? "rotate-90" : "rotate-0"}`} />
+              )}
+            </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab("myforms");
-              setIsMobileOpen(false);
-            }}
-            className={`flex items-center gap-3 px-3 py-2.5 transition-all w-full text-left cursor-pointer border-2 ${
-              isCollapsed ? "md:justify-center" : ""
-            } ${
-              activeTab === "myforms"
-                ? "bg-[#16a34a] text-white font-extrabold border-slate-900 shadow-[2px_2px_0px_0px_#000]"
-                : "text-emerald-800 hover:text-[#16a34a] border-transparent font-medium"
-            }`}
-            style={{ borderRadius: "10px 4px 8px 3px/3px 8px 3px 10px" }}
-            title="My Forms"
-          >
-            <FileText className="w-5 h-5 flex-shrink-0" />
-            {(!isCollapsed || isMobileOpen) && (
-              <span className="text-sm whitespace-nowrap">My Forms</span>
-            )}
-          </button>
+            {/* Dropdown Items */}
+            <div className={`pl-6 flex flex-col gap-1 w-full overflow-hidden transition-all duration-300 ease-in-out ${isFormsDropdownOpen && (!isCollapsed || isMobileOpen) ? "max-h-40 opacity-100 mt-1" : "max-h-0 opacity-0 mt-0"}`}>
+              {isLoadingForms ? (
+                <div className="text-[10px] text-slate-400 font-bold px-2 py-1 flex items-center gap-1">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <span>Loading...</span>
+                </div>
+              ) : !forms || (Array.isArray(forms) && forms.length === 0) ? (
+                <div className="text-[10px] text-slate-400 font-bold px-2 py-1 italic">
+                  No forms
+                </div>
+              ) : (
+                Array.isArray(forms) &&
+                forms.map((form) => (
+                  <button
+                    key={form.id}
+                    onClick={() => {
+                      router.push(`/buildform?id=${form.id}&workspaceId=${activeWorkspace?.id ?? ""}`);
+                    }}
+                    className="text-xs text-left px-2 py-1.5 text-emerald-700 hover:text-[#16a34a] hover:bg-emerald-50/50 rounded-md font-medium truncate w-full transition-colors cursor-pointer"
+                    title={form.title}
+                  >
+                    {form.title}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
         </nav>
 
       </aside>
@@ -483,17 +490,11 @@ function GetStartedPageContent() {
 
         {/* Dynamic Content Component Display */}
         <div className="flex-1 w-full">
-          {activeTab === "dashboard" ? (
-            <GetStartedContent />
-          ) : (
-            <FormsContent
-              activeSubTab={activeTab === "create" ? "create" : "myforms"}
-              setActiveSubTab={(subTab) => setActiveTab(subTab)}
-              workspaceId={activeWorkspace?.id ?? ""}
-              isReadOnly={activeWorkspace ? activeWorkspace.role === "read" : false}
-              onInviteTeam={() => setShowInviteTeamModal(true)}
-            />
-          )}
+          <FormsContent
+            workspaceId={activeWorkspace?.id ?? ""}
+            isReadOnly={activeWorkspace ? activeWorkspace.role === "read" : false}
+            onInviteTeam={() => setShowInviteTeamModal(true)}
+          />
         </div>
       </div>
       {/* Create Workspace Modal */}
