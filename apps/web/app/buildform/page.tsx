@@ -57,6 +57,7 @@ import {
   Bold,
   Italic,
   Underline,
+  AlertTriangle,
   type LucideIcon,
 } from "lucide-react";
 import { trpc } from "~/trpc/client";
@@ -179,7 +180,7 @@ export const PRESET_THEMES: FormTheme[] = [
     backgroundColor: "#f8fafc",
     cardBackgroundColor: "#ffffff",
     textColor: "#0f172a",
-    accentColor: "#0d5c41",
+    accentColor: "#16a34a",
   },
   {
     name: "Deep Forest",
@@ -206,7 +207,7 @@ export const PRESET_THEMES: FormTheme[] = [
 
 export const COLOR_SWATCHES = [
   "#092218", // Deep Forest
-  "#0d5c41", // Leaf Green
+  "#16a34a", // Leaf Green
   "#134e3b", // Forest Dark
   "#065f46", // Dark Emerald
   "#34d399", // Emerald Light
@@ -250,7 +251,7 @@ export function ColorRingPicker({
 
   // Convert Hex to HSL for the Hue ring calculation
   const hexToHsl = (hex: string) => {
-    let c = (hex || "#0d5c41").replace("#", "");
+    let c = (hex || "#16a34a").replace("#", "");
     if (c.length === 3)
       c = c
         .split("")
@@ -299,7 +300,7 @@ export function ColorRingPicker({
     return `#${f(0)}${f(8)}${f(4)}`;
   };
 
-  const { h, s, l } = hexToHsl(color || "#0d5c41");
+  const { h, s, l } = hexToHsl(color || "#16a34a");
 
   const handleHueRingClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -328,7 +329,7 @@ export function ColorRingPicker({
       >
         <div
           className="w-3.5 h-3.5 rounded-full border border-black/20 shadow-xs ring-2 ring-offset-1 ring-emerald-500/30 group-hover:scale-110 transition-transform shrink-0"
-          style={{ backgroundColor: color || "#0d5c41" }}
+          style={{ backgroundColor: color || "#16a34a" }}
         />
         {label && <span className="text-[9px] font-bold text-slate-700">{label}</span>}
       </button>
@@ -341,7 +342,7 @@ export function ColorRingPicker({
         >
           <div className="flex items-center justify-between border-b border-slate-100 pb-2">
             <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
-              <Palette className="w-3.5 h-3.5 text-[#0d5c41]" />
+              <Palette className="w-3.5 h-3.5 text-[#16a34a]" />
               Color Ring Palette
             </span>
             <button
@@ -366,7 +367,7 @@ export function ColorRingPicker({
               {/* Inner cutout hole to make it a ring */}
               <div
                 className="w-24 h-24 rounded-full flex flex-col items-center justify-center border border-slate-200 shadow-inner"
-                style={{ backgroundColor: color || "#0d5c41" }}
+                style={{ backgroundColor: color || "#16a34a" }}
               >
                 <span
                   className={`text-[10px] font-extrabold uppercase font-mono px-2 py-0.5 rounded-full ${
@@ -407,7 +408,7 @@ export function ColorRingPicker({
                     onClick={() => onChange(swatch)}
                     className={`w-5 h-5 rounded-full border border-slate-300 transition-all cursor-pointer relative ${
                       isSelected
-                        ? "ring-2 ring-offset-1 ring-[#0d5c41] scale-110 shadow-xs"
+                        ? "ring-2 ring-offset-1 ring-[#16a34a] scale-110 shadow-xs"
                         : "hover:scale-110"
                     }`}
                     style={{ backgroundColor: swatch }}
@@ -424,13 +425,13 @@ export function ColorRingPicker({
             <div className="flex items-center gap-1">
               <input
                 type="text"
-                value={color || "#0d5c41"}
+                value={color || "#16a34a"}
                 onChange={(e) => onChange(e.target.value)}
                 className="w-24 px-2 py-1 text-xs font-mono font-bold rounded-lg border border-slate-200 bg-slate-50 text-slate-900 focus:bg-white focus:border-emerald-500 focus:outline-none uppercase"
               />
               <input
                 type="color"
-                value={color || "#0d5c41"}
+                value={color || "#16a34a"}
                 onChange={(e) => onChange(e.target.value)}
                 className="w-6 h-6 rounded-md border border-slate-200 cursor-pointer overflow-hidden"
               />
@@ -514,30 +515,26 @@ function TypeformFieldRenderer({
 }) {
   const [value, setValue] = useState<any>("");
 
-  const cardBg = field.style?.backgroundColor || formTheme?.cardBackgroundColor || "#ffffff";
   const textColor = field.style?.textColor || formTheme?.textColor || "#0f172a";
-  const accentColor = field.style?.accentColor || formTheme?.accentColor || "#0d5c41";
 
   const fontStyle = {
     fontFamily: parseFontFamily(field.font),
-    backgroundColor: cardBg,
     color: textColor,
-    borderColor: `${accentColor}35`,
   };
   const letterBadges = ["A", "B", "C", "D", "E", "F"];
   const defaultChoices = field.options || ["Option 1", "Option 2", "Option 3", "Option 4"];
 
   return (
     <div
-      className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-sm hover:shadow-md transition-all space-y-4 text-left group"
+      className="w-full py-6 space-y-4 text-left group"
       style={fontStyle}
     >
       {/* Typeform Question Header: Number + Title + Required */}
       <div className="space-y-1">
         <div className="flex items-start gap-2.5">
-          <span className="text-xs font-black text-[#0d5c41] bg-emerald-50 px-2 py-0.5 rounded-lg shrink-0 flex items-center gap-1 border border-emerald-100 mt-0.5">
+          <span className="text-xs font-black text-[#16a34a] bg-emerald-50 px-2 py-0.5 rounded-lg shrink-0 flex items-center gap-1 border border-emerald-100 mt-0.5">
             <span>{index + 1}</span>
-            <ChevronRight className="w-3 h-3 text-[#0d5c41]" />
+            <ChevronRight className="w-3 h-3 text-[#16a34a]" />
           </span>
           <div className="flex-1">
             <h3
@@ -554,7 +551,7 @@ function TypeformFieldRenderer({
             )}
           </div>
           {field.font && (
-            <span className="text-[9px] font-semibold text-[#0d5c41] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 shrink-0">
+            <span className="text-[9px] font-semibold text-[#16a34a] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 shrink-0">
               {field.font}
             </span>
           )}
@@ -574,14 +571,14 @@ function TypeformFieldRenderer({
                 onClick={() => setValue(choice)}
                 className={`p-3 rounded-2xl border text-xs font-bold flex items-center gap-3 transition-all cursor-pointer ${
                   isSelected
-                    ? "bg-emerald-50/90 border-[#0d5c41] text-[#0d5c41] shadow-xs ring-1 ring-[#0d5c41]/30"
+                    ? "bg-emerald-50/90 border-[#16a34a] text-[#16a34a] shadow-xs ring-1 ring-[#16a34a]/30"
                     : "bg-slate-50/80 border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300"
                 }`}
               >
                 <span
                   className={`w-6 h-6 rounded-lg text-[10px] font-black flex items-center justify-center border transition-colors ${
                     isSelected
-                      ? "bg-[#0d5c41] text-white border-[#0d5c41]"
+                      ? "bg-[#16a34a] text-white border-[#16a34a]"
                       : "bg-white text-slate-500 border-slate-200"
                   }`}
                 >
@@ -604,14 +601,14 @@ function TypeformFieldRenderer({
                 onClick={() => setValue(opt)}
                 className={`flex-1 py-3 px-4 rounded-2xl border text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
                   isSelected
-                    ? "bg-emerald-50/90 border-[#0d5c41] text-[#0d5c41] shadow-xs ring-1 ring-[#0d5c41]/30"
+                    ? "bg-emerald-50/90 border-[#16a34a] text-[#16a34a] shadow-xs ring-1 ring-[#16a34a]/30"
                     : "bg-slate-50/80 border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300"
                 }`}
               >
                 <span
                   className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase border ${
                     isSelected
-                      ? "bg-[#0d5c41] text-white border-[#0d5c41]"
+                      ? "bg-[#16a34a] text-white border-[#16a34a]"
                       : "bg-white text-slate-500 border-slate-200"
                   }`}
                 >
@@ -653,7 +650,7 @@ function TypeformFieldRenderer({
                 onClick={() => setValue(num)}
                 className={`w-8 h-9 rounded-xl border text-xs font-extrabold flex items-center justify-center transition-all cursor-pointer shrink-0 ${
                   isSelected
-                    ? "bg-[#0d5c41] text-white border-[#0d5c41] shadow-xs"
+                    ? "bg-[#16a34a] text-white border-[#16a34a] shadow-xs"
                     : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
                 }`}
               >
@@ -682,7 +679,7 @@ function TypeformFieldRenderer({
             onChange={(e) => setValue(e.target.value)}
             placeholder={field.placeholder || "Type your answer here..."}
             style={fontStyle}
-            className="w-full px-4 py-3 text-xs sm:text-sm rounded-2xl bg-slate-50/70 border border-slate-200 focus:bg-white focus:border-[#0d5c41] focus:ring-2 focus:ring-emerald-500/20 text-slate-900 transition-all focus:outline-none"
+            className="w-full px-4 py-3 text-xs sm:text-sm rounded-2xl bg-slate-50/70 border border-slate-200 focus:bg-white focus:border-[#16a34a] focus:ring-2 focus:ring-emerald-500/20 text-slate-900 transition-all focus:outline-none"
           />
         </div>
       )}
@@ -692,7 +689,7 @@ function TypeformFieldRenderer({
         <span>Typeform field layout</span>
         <button
           type="button"
-          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-[#0d5c41] text-slate-600 font-bold flex items-center gap-1 transition-colors cursor-pointer"
+          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-[#16a34a] text-slate-600 font-bold flex items-center gap-1 transition-colors cursor-pointer"
         >
           <span>OK</span>
           <span className="font-mono text-[9px]">↵</span>
@@ -709,6 +706,9 @@ function BuildFormContent() {
 
   const utils = trpc.useUtils();
   const saveFormMutation = trpc.form.saveForm.useMutation();
+
+  const { data: workspaces } = trpc.workspace.getUserWorkspaces.useQuery();
+  const workspaceId = searchParams?.get("workspaceId") || workspaces?.[0]?.id || "";
 
   const { data: existingForm } = trpc.form.getPublicForm.useQuery(
     { id: existingFormId },
@@ -728,6 +728,7 @@ function BuildFormContent() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [isPublishSuccess, setIsPublishSuccess] = useState(false);
   const [publishStage, setPublishStage] = useState(0);
+  const [publishError, setPublishError] = useState<string | null>(null);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
@@ -783,6 +784,7 @@ function BuildFormContent() {
   const handleConfirmPublishLive = async () => {
     try {
       setIsPublishing(true);
+      setPublishError(null);
       setPublishStage(0);
       const timer1 = setTimeout(() => setPublishStage(1), 600);
       const timer2 = setTimeout(() => setPublishStage(2), 1200);
@@ -794,9 +796,13 @@ function BuildFormContent() {
       clearTimeout(timer2);
       setIsPublishing(false);
       setIsPublishSuccess(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Publish error:", err);
       setIsPublishing(false);
+      setIsPublishSuccess(false);
+      setPublishError(
+        err?.message || "Failed to publish form. Please check your database connection."
+      );
     }
   };
 
@@ -822,6 +828,7 @@ function BuildFormContent() {
 
       const res = await saveFormMutation.mutateAsync({
         id: savedFormId || undefined,
+        workspaceId,
         title: formTitle || "Untitled Form",
         description: `Form with ${pages.length} pages and ${allFields.length} fields`,
         state: targetState,
@@ -850,35 +857,25 @@ function BuildFormContent() {
         err?.message || "Error saving form to database. Please check your login session.",
       );
       setTimeout(() => setSaveSuccessMessage(null), 4000);
+      throw err;
     } finally {
       setIsSavingDraft(false);
     }
   };
 
-  // Fetch available field types from the backend
-  const { data: fieldTypes, isLoading: isFieldTypesLoading } =
-    trpc.form.getAvailableFieldTypes.useQuery(undefined, {
-      staleTime: 1000 * 60 * 30, // cache for 30 mins – field types rarely change
-    });
-
-  const activeFieldTypes = useMemo(() => {
-    if (Array.isArray(fieldTypes) && fieldTypes.length > 0) {
-      return fieldTypes;
-    }
-    return DEFAULT_FIELD_TYPES;
-  }, [fieldTypes]);
+  const activeFieldTypes = DEFAULT_FIELD_TYPES;
 
   // Group field types by category for the palette drawer
   const groupedFieldTypes = useMemo(() => {
-    return activeFieldTypes.reduce(
-      (acc, item) => {
-        if (!acc[item.category]) acc[item.category] = [];
-        acc[item.category]!.push(item);
-        return acc;
-      },
-      {} as Record<string, typeof activeFieldTypes>,
-    );
-  }, [activeFieldTypes]);
+    const groups: Record<string, typeof DEFAULT_FIELD_TYPES> = {};
+    for (const item of DEFAULT_FIELD_TYPES) {
+      if (!groups[item.category]) {
+        groups[item.category] = [];
+      }
+      groups[item.category]?.push(item);
+    }
+    return groups;
+  }, []);
 
   // Multi-Page State (Max 5 pages)
   const [pages, setPages] = useState<FormPage[]>([
@@ -936,7 +933,7 @@ function BuildFormContent() {
         id: "node-start",
         label: `Start (${activePage.title})`,
         type: "start",
-        x: prevNodeMap.get("node-start")?.x ?? centerX,
+        x: centerX + 160,
         y: 80,
       };
 
@@ -961,7 +958,7 @@ function BuildFormContent() {
         id: "node-end",
         label: `End (${activePage.title})`,
         type: "end",
-        x: prevNodeMap.get("node-end")?.x ?? centerX,
+        x: centerX + 160,
         y: lastFieldY + 280,
       };
 
@@ -969,8 +966,31 @@ function BuildFormContent() {
     });
   }, [activePageIndex, pages, getCanvasCenterX]);
 
+  const canvasDimensions = useMemo(() => {
+    if (nodes.length === 0) return { width: 1200, height: 800 };
+    const maxX = Math.max(
+      1200,
+      ...nodes.map((n) => n.x + (n.type === "start" || n.type === "end" ? 320 : 640) + 100)
+    );
+    const maxY = Math.max(
+      800,
+      ...nodes.map((n) => n.y + (n.type === "start" || n.type === "end" ? 68 : 280) + 200)
+    );
+    return { width: maxX, height: maxY };
+  }, [nodes]);
+
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const dragOffset = useRef({ x: 0, y: 0 });
+
+  // Preview mode page transition state
+  const [previewPageIndex, setPreviewPageIndex] = useState(0);
+
+  // Keep previewPageIndex in sync when switching to preview view
+  useEffect(() => {
+    if (activeView === "preview") {
+      setPreviewPageIndex(activePageIndex);
+    }
+  }, [activeView, activePageIndex]);
 
   const handleZoomIn = () => setZoom((z) => Math.min(z + 15, 180));
   const handleZoomOut = () => setZoom((z) => Math.max(z - 15, 50));
@@ -1195,36 +1215,43 @@ function BuildFormContent() {
       const fieldName = e.dataTransfer.getData("application/leafform-field-name");
       if (!fieldType || !fieldName) return;
 
-      // Convert drop coordinates to canvas space (account for zoom + container offset)
+      // Convert drop coordinates to canvas space (account for zoom + container offset + scroll)
       const container = canvasContainerRef.current;
       if (!container) return;
       const rect = container.getBoundingClientRect();
       const scale = zoom / 100;
-      const dropX = Math.max(10, (e.clientX - rect.left) / scale);
-      const dropY = Math.max(10, (e.clientY - rect.top) / scale);
+      const dropX = Math.max(10, (e.clientX - rect.left + container.scrollLeft) / scale);
+      const dropY = Math.max(10, (e.clientY - rect.top + container.scrollTop) / scale);
 
       handleAddFieldToActivePage(fieldType, fieldName);
     },
-    [handleAddFieldToActivePage],
+    [handleAddFieldToActivePage, zoom],
   );
 
   const handleMouseDown = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
+    const container = canvasContainerRef.current;
+    if (!container) return;
     setDraggingId(id);
     const node = nodes.find((n) => n.id === id);
     if (node) {
+      const rect = container.getBoundingClientRect();
+      const scale = zoom / 100;
       dragOffset.current = {
-        x: (e.clientX - node.x * (zoom / 100)) / (zoom / 100),
-        y: (e.clientY - node.y * (zoom / 100)) / (zoom / 100),
+        x: (e.clientX - rect.left + container.scrollLeft - node.x * scale) / scale,
+        y: (e.clientY - rect.top + container.scrollTop - node.y * scale) / scale,
       };
     }
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!draggingId) return;
+    const container = canvasContainerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
     const scale = zoom / 100;
-    const newX = Math.max(10, (e.clientX - dragOffset.current.x * scale) / scale);
-    const newY = Math.max(10, (e.clientY - dragOffset.current.y * scale) / scale);
+    const newX = Math.max(10, (e.clientX - rect.left + container.scrollLeft - dragOffset.current.x * scale) / scale);
+    const newY = Math.max(10, (e.clientY - rect.top + container.scrollTop - dragOffset.current.y * scale) / scale);
     setNodes((prev) => prev.map((n) => (n.id === draggingId ? { ...n, x: newX, y: newY } : n)));
   };
 
@@ -1289,7 +1316,7 @@ function BuildFormContent() {
             onClick={() => setActiveView("canvas")}
             className={`px-4 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
               activeView === "canvas"
-                ? "bg-[#0d5c41] text-white shadow-xs"
+                ? "bg-[#16a34a] text-white shadow-xs"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
             }`}
           >
@@ -1302,7 +1329,7 @@ function BuildFormContent() {
             onClick={() => setActiveView("preview")}
             className={`px-4 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
               activeView === "preview"
-                ? "bg-[#0d5c41] text-white shadow-xs"
+                ? "bg-[#16a34a] text-white shadow-xs"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
             }`}
           >
@@ -1318,7 +1345,7 @@ function BuildFormContent() {
             onClick={() => setIsThemePanelOpen(!isThemePanelOpen)}
             className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
               isThemePanelOpen
-                ? "bg-[#0d5c41] text-white shadow-xs"
+                ? "bg-[#16a34a] text-white shadow-xs"
                 : "bg-slate-100 hover:bg-slate-200 text-slate-700"
             }`}
             title="Form Theme & Global Styling"
@@ -1331,14 +1358,14 @@ function BuildFormContent() {
           <button
             type="button"
             disabled={isSavingDraft}
-            onClick={() => handleSaveFormDraft("drafted", false)}
+            onClick={() => handleSaveFormDraft("drafted", false).catch(() => {})}
             className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
             title="Save as Draft in Database"
           >
             {isSavingDraft ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0d5c41]" />
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#16a34a]" />
             ) : (
-              <FileText className="w-3.5 h-3.5 text-[#0d5c41]" />
+              <FileText className="w-3.5 h-3.5 text-[#16a34a]" />
             )}
             <span>Save Draft</span>
           </button>
@@ -1348,12 +1375,18 @@ function BuildFormContent() {
             type="button"
             disabled={isSavingDraft}
             onClick={async () => {
+              setPublishError(null);
+              setIsPublishSuccess(false);
               if (!savedFormId) {
-                await handleSaveFormDraft("published", false);
+                try {
+                  await handleSaveFormDraft("published", false);
+                } catch (err) {
+                  return;
+                }
               }
               setIsPublishModalOpen(true);
             }}
-            className="px-4 py-1.5 rounded-xl bg-[#0d5c41] hover:bg-[#065f46] text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+            className="px-4 py-1.5 rounded-xl bg-[#16a34a] hover:bg-[#065f46] text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-50"
             title="Review & Publish Form"
           >
             <Check className="w-3.5 h-3.5" />
@@ -1366,7 +1399,7 @@ function BuildFormContent() {
       {isThemePanelOpen && (
         <div className="absolute top-16 right-6 z-40 w-80 bg-white/95 backdrop-blur-md border border-slate-200 rounded-3xl p-5 shadow-2xl flex flex-col gap-4 max-h-[80vh] overflow-y-auto animate-fadeIn select-none">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div className="flex items-center gap-2 text-[#0d5c41] font-bold text-xs">
+            <div className="flex items-center gap-2 text-[#16a34a] font-bold text-xs">
               <Palette className="w-4 h-4" />
               <span>Form Theme & Global Styling</span>
             </div>
@@ -1394,7 +1427,7 @@ function BuildFormContent() {
                     onClick={() => setFormTheme(theme)}
                     className={`p-3 rounded-2xl border text-xs font-bold flex items-center justify-between transition-all cursor-pointer ${
                       isActive
-                        ? "border-[#0d5c41] bg-emerald-50/80 text-[#0d5c41] shadow-xs"
+                        ? "border-[#16a34a] bg-emerald-50/80 text-[#16a34a] shadow-xs"
                         : "border-slate-200 bg-slate-50/80 hover:bg-slate-100 text-slate-700"
                     }`}
                   >
@@ -1410,7 +1443,7 @@ function BuildFormContent() {
                       </div>
                       <span>{theme.name}</span>
                     </div>
-                    {isActive && <Check className="w-4 h-4 text-[#0d5c41]" />}
+                    {isActive && <Check className="w-4 h-4 text-[#16a34a]" />}
                   </button>
                 );
               })}
@@ -1462,7 +1495,7 @@ function BuildFormContent() {
             {/* Form Language Selector */}
             <div className="flex items-center justify-between text-xs font-semibold text-slate-700 pt-2 border-t border-slate-100">
               <div className="flex items-center gap-1.5">
-                <Globe className="w-4 h-4 text-[#0d5c41]" />
+                <Globe className="w-4 h-4 text-[#16a34a]" />
                 <span>Form Language</span>
               </div>
               <select
@@ -1484,12 +1517,16 @@ function BuildFormContent() {
       {/* Main View Area */}
       {activeView === "canvas" ? (
         <div
-          ref={canvasContainerRef}
           className="flex-1 relative w-full h-full cursor-crosshair bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:24px_24px] transition-colors duration-300"
           style={{ backgroundColor: formTheme.backgroundColor }}
-          onDragOver={handleCanvasDragOver}
-          onDrop={handleCanvasDrop}
         >
+          {/* Scrollable Canvas Viewport */}
+          <div
+            ref={canvasContainerRef}
+            className="absolute inset-0 overflow-auto"
+            onDragOver={handleCanvasDragOver}
+            onDrop={handleCanvasDrop}
+          >
           {/* Page Selector Floating Top Ribbon (Up to 5 Pages) */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl p-1.5 shadow-md flex items-center gap-1.5">
             {pages.map((page, idx) => (
@@ -1499,7 +1536,7 @@ function BuildFormContent() {
                   onClick={() => setActivePageIndex(idx)}
                   className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     activePageIndex === idx
-                      ? "bg-[#0d5c41] text-white shadow-xs"
+                      ? "bg-[#16a34a] text-white shadow-xs"
                       : "text-slate-600 hover:bg-slate-100"
                   }`}
                 >
@@ -1522,7 +1559,7 @@ function BuildFormContent() {
               <button
                 type="button"
                 onClick={handleAddPage}
-                className="px-2.5 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#0d5c41] font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                className="px-2.5 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-[#16a34a] font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
                 title="Add Page (Up to 5 pages)"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -1541,16 +1578,16 @@ function BuildFormContent() {
                 onClick={() => setIsFieldsPanelOpen(true)}
                 className="px-3.5 py-2 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200 shadow-lg text-slate-800 font-bold text-xs flex items-center gap-2 hover:bg-slate-50 transition-all cursor-pointer"
               >
-                <ListPlus className="w-4 h-4 text-[#0d5c41]" />
+                <ListPlus className="w-4 h-4 text-[#16a34a]" />
                 <span>Add Fields</span>
               </button>
             ) : (
               <div className="w-60 bg-white/95 backdrop-blur-md border border-slate-200 rounded-3xl p-4 shadow-xl flex flex-col gap-3 max-h-[80vh] overflow-y-auto">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                  <div className="flex items-center gap-1.5 text-[#0d5c41] font-bold text-xs">
+                  <div className="flex items-center gap-1.5 text-[#16a34a] font-bold text-xs">
                     <ListPlus className="w-4 h-4" />
                     <span>Form Inputs</span>
-                    <span className="px-1.5 py-0.5 text-[10px] bg-emerald-100 text-[#0d5c41] rounded-full font-extrabold">
+                    <span className="px-1.5 py-0.5 text-[10px] bg-emerald-100 text-[#16a34a] rounded-full font-extrabold">
                       {activeFieldTypes.length || DEFAULT_FIELD_TYPES.length}
                     </span>
                   </div>
@@ -1577,11 +1614,11 @@ function BuildFormContent() {
                             draggable
                             onDragStart={(e) => handleDragStart(e, item.type, item.name)}
                             onClick={() => handleAddFieldToActivePage(item.type, item.name)}
-                            className="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 border border-slate-100 transition-all flex items-center justify-between text-slate-700 hover:text-[#0d5c41] cursor-grab active:cursor-grabbing group text-xs font-semibold select-none"
+                            className="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 border border-slate-100 transition-all flex items-center justify-between text-slate-700 hover:text-[#16a34a] cursor-grab active:cursor-grabbing group text-xs font-semibold select-none"
                           >
                             <div className="flex items-center gap-2">
                               <GripVertical className="w-3 h-3 text-slate-300 group-hover:text-slate-400 shrink-0" />
-                              <IconComp className="w-3.5 h-3.5 text-slate-500 group-hover:text-[#0d5c41] shrink-0" />
+                              <IconComp className="w-3.5 h-3.5 text-slate-500 group-hover:text-[#16a34a] shrink-0" />
                               <span>{item.name}</span>
                             </div>
                             <Plus className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
@@ -1597,19 +1634,24 @@ function BuildFormContent() {
 
           {/* Zoomable Canvas Container */}
           <div
-            className="absolute inset-0 origin-top-left transition-transform duration-75"
-            style={{ transform: `scale(${zoom / 100})` }}
+            className="absolute origin-top-left transition-transform duration-75"
+            style={{
+              transform: `scale(${zoom / 100})`,
+              width: `${canvasDimensions.width}px`,
+              height: `${canvasDimensions.height}px`,
+            }}
           >
             {/* SVG Connecting Flow Lines between Canvas Nodes */}
             <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
               {nodes.slice(0, -1).map((node, i) => {
                 const nextNode = nodes[i + 1];
                 if (!nextNode) return null;
-                const cardWidth = 640; // 640px wide card
-                const cardHeight = node.type === "start" ? 50 : 200;
-                const startX = node.x + cardWidth / 2;
+                const nodeWidth = node.type === "start" || node.type === "end" ? 320 : 640;
+                const nextNodeWidth = nextNode.type === "start" || nextNode.type === "end" ? 320 : 640;
+                const cardHeight = node.type === "start" ? 68 : 200;
+                const startX = node.x + nodeWidth / 2;
                 const startY = node.y + cardHeight;
-                const endX = nextNode.x + cardWidth / 2;
+                const endX = nextNode.x + nextNodeWidth / 2;
                 const endY = nextNode.y;
 
                 const deltaY = Math.max(20, endY - startY);
@@ -1619,7 +1661,7 @@ function BuildFormContent() {
                   <g key={`line-${node.id}-${nextNode.id}`}>
                     <path
                       d={`M ${startX} ${startY} C ${startX} ${startY + controlY}, ${endX} ${endY - controlY}, ${endX} ${endY}`}
-                      stroke="#0d5c41"
+                      stroke="#16a34a"
                       strokeWidth="2.5"
                       strokeDasharray="6 6"
                       fill="none"
@@ -1636,7 +1678,10 @@ function BuildFormContent() {
               return (
                 <div
                   key={node.id}
-                  onMouseDown={(e) => handleMouseDown(e, node.id)}
+                  onMouseDown={(e) => {
+                    if (node.type === "start" || node.type === "end") return;
+                    handleMouseDown(e, node.id);
+                  }}
                   style={{
                     left: `${node.x}px`,
                     top: `${node.y}px`,
@@ -1644,7 +1689,11 @@ function BuildFormContent() {
                       node.style?.backgroundColor || formTheme.cardBackgroundColor || "#ffffff",
                     color: node.style?.textColor || formTheme.textColor || "#0f172a",
                   }}
-                  className={`absolute w-[600px] sm:w-[640px] p-6 sm:p-7 rounded-[2rem] backdrop-blur-md shadow-2xl border transition-all duration-200 cursor-grab active:cursor-grabbing z-10 flex flex-col gap-4 select-none ${
+                  className={`absolute p-6 sm:p-7 rounded-[2rem] backdrop-blur-md shadow-2xl border transition-all duration-200 z-10 flex flex-col gap-4 select-none ${
+                    node.type === "start" || node.type === "end"
+                      ? "w-[320px] cursor-default"
+                      : "w-[600px] sm:w-[640px] cursor-grab active:cursor-grabbing"
+                  } ${
                     node.type === "start"
                       ? "border-emerald-500/60 ring-2 ring-emerald-500/10"
                       : node.type === "end"
@@ -1671,8 +1720,8 @@ function BuildFormContent() {
                       {/* Node Top Action Bar: Type, Required, Font, Card Colors, Delete */}
                       <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
                         <div className="flex items-center gap-2">
-                          <span className="w-2.5 h-2.5 rounded-full bg-[#0d5c41]" />
-                          <span className="text-xs font-extrabold uppercase tracking-wider text-[#0d5c41] bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 whitespace-nowrap">
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#16a34a]" />
+                          <span className="text-xs font-extrabold uppercase tracking-wider text-[#16a34a] bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 whitespace-nowrap">
                             {node.type.replace("_", " ")}
                           </span>
                         </div>
@@ -1720,7 +1769,7 @@ function BuildFormContent() {
 
                           {/* Font Selector */}
                           <div className="relative flex items-center group">
-                            <Type className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#0d5c41] absolute left-1.5 pointer-events-none" />
+                            <Type className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#16a34a] absolute left-1.5 pointer-events-none" />
                             <select
                               value={node.font || "Inter"}
                               onMouseDown={(e) => e.stopPropagation()}
@@ -1728,7 +1777,7 @@ function BuildFormContent() {
                                 e.stopPropagation();
                                 handleUpdateFieldFont(node.id, e.target.value);
                               }}
-                              className="pl-5 pr-1.5 py-0.5 text-xs font-semibold text-slate-600 bg-slate-50 hover:bg-emerald-50 hover:text-[#0d5c41] border border-slate-200 hover:border-emerald-300 rounded-lg focus:outline-none cursor-pointer transition-all appearance-none max-w-28 truncate"
+                              className="pl-5 pr-1.5 py-0.5 text-xs font-semibold text-slate-600 bg-slate-50 hover:bg-emerald-50 hover:text-[#16a34a] border border-slate-200 hover:border-emerald-300 rounded-lg focus:outline-none cursor-pointer transition-all appearance-none max-w-28 truncate"
                               title="Change field font"
                             >
                               {AVAILABLE_FONTS.map((font) => (
@@ -1752,7 +1801,7 @@ function BuildFormContent() {
                               }}
                               className={`p-1 rounded-md text-xs transition-colors cursor-pointer ${
                                 node.style?.fontWeight === "bold"
-                                  ? "bg-[#0d5c41] text-white shadow-xs"
+                                  ? "bg-[#16a34a] text-white shadow-xs"
                                   : "text-slate-600 hover:bg-slate-200"
                               }`}
                               title="Bold"
@@ -1772,7 +1821,7 @@ function BuildFormContent() {
                               }}
                               className={`p-1 rounded-md text-xs transition-colors cursor-pointer ${
                                 node.style?.fontStyle === "italic"
-                                  ? "bg-[#0d5c41] text-white shadow-xs"
+                                  ? "bg-[#16a34a] text-white shadow-xs"
                                   : "text-slate-600 hover:bg-slate-200"
                               }`}
                               title="Italic"
@@ -1794,7 +1843,7 @@ function BuildFormContent() {
                               }}
                               className={`p-1 rounded-md text-xs transition-colors cursor-pointer ${
                                 node.style?.textDecoration === "underline"
-                                  ? "bg-[#0d5c41] text-white shadow-xs"
+                                  ? "bg-[#16a34a] text-white shadow-xs"
                                   : "text-slate-600 hover:bg-slate-200"
                               }`}
                               title="Underline"
@@ -1895,7 +1944,7 @@ function BuildFormContent() {
                                   ];
                                   handleUpdateFieldOptions(node.id, curOpts);
                                 }}
-                                className="px-2.5 py-1 rounded-xl bg-emerald-50 text-[#0d5c41] font-bold text-xs hover:bg-emerald-100 cursor-pointer border border-emerald-200"
+                                className="px-2.5 py-1 rounded-xl bg-emerald-50 text-[#16a34a] font-bold text-xs hover:bg-emerald-100 cursor-pointer border border-emerald-200"
                               >
                                 + Add Option
                               </button>
@@ -1923,8 +1972,9 @@ function BuildFormContent() {
               );
             })}
           </div>
+        </div>
 
-          {/* Floating Bottom Left Zoom Interaction Control Bar */}
+        {/* Floating Bottom Left Zoom Interaction Control Bar */}
           <div className="absolute bottom-6 left-6 z-30 bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl p-1.5 shadow-xl flex items-center gap-1 text-slate-700">
             <button
               type="button"
@@ -1963,56 +2013,74 @@ function BuildFormContent() {
       ) : (
         /* Preview Mode Container (Supports Multi-Page Form Flow) */
         <div
-          className="flex-1 w-full h-full p-6 flex flex-col items-center justify-center overflow-auto animate-fadeIn transition-colors duration-300"
+          className="flex-1 w-full h-full p-6 flex flex-col items-center justify-center overflow-auto transition-colors duration-300"
           style={{ backgroundColor: formTheme.backgroundColor }}
         >
           <div
-            className="w-full max-w-xl rounded-3xl p-8 sm:p-10 shadow-2xl border flex flex-col gap-6 transition-colors duration-300"
+            className="w-full max-w-xl rounded-3xl p-8 sm:p-10 shadow-2xl border flex flex-col gap-6 transition-colors duration-300 overflow-hidden"
             style={{
               backgroundColor: formTheme.cardBackgroundColor || "#ffffff",
               color: formTheme.textColor || "#0f172a",
-              borderColor: `${formTheme.accentColor || "#0d5c41"}40`,
+              borderColor: `${formTheme.accentColor || "#16a34a"}40`,
             }}
           >
-            <div className="space-y-2 text-center border-b border-slate-200/50 pb-6">
-              <h2
-                className="text-2xl font-black tracking-tight"
-                style={{ color: formTheme.textColor || "#0f172a" }}
+            {/* Pages Slider Wrapper */}
+            <div className="w-full overflow-hidden relative flex-1">
+              <div
+                className="transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex"
+                style={{
+                  transform: `translateX(-${(previewPageIndex * 100) / pages.length}%)`,
+                  width: `${pages.length * 100}%`,
+                }}
               >
-                {formTitle || "Untitled Form"}
-              </h2>
-              <div className="flex items-center justify-center gap-2">
-                <span className="text-xs font-bold text-[#0d5c41] bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
-                  Page {activePageIndex + 1} of {pages.length}
-                </span>
+                {pages.map((page) => (
+                  <div
+                    key={page.id}
+                    className="w-full shrink-0 flex flex-col gap-6"
+                    style={{ width: `${100 / pages.length}%` }}
+                  >
+                    <div className="space-y-2 text-center border-b border-slate-200/50 pb-6">
+                      <h2
+                        className="text-2xl font-black tracking-tight"
+                        style={{ color: formTheme.textColor || "#0f172a" }}
+                      >
+                        {formTitle || "Untitled Form"}
+                      </h2>
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-xs font-bold text-[#16a34a] bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+                          Page {page.id} of {pages.length}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      {page.fields.length === 0 ? (
+                        <p className="text-xs text-slate-400 text-center py-6">
+                          No fields configured for Page {page.id}. Use the Canvas Fields panel to add
+                          inputs.
+                        </p>
+                      ) : (
+                        page.fields.map((field, idx) => (
+                          <TypeformFieldRenderer
+                            key={field.id}
+                            field={field}
+                            index={idx}
+                            formTheme={formTheme}
+                          />
+                        ))
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* Active Preview Page Fields */}
-            <div className="space-y-4">
-              {activePage.fields.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-6">
-                  No fields configured for Page {activePage.id}. Use the Canvas Fields panel to add
-                  inputs.
-                </p>
-              ) : (
-                activePage.fields.map((field, idx) => (
-                  <TypeformFieldRenderer
-                    key={field.id}
-                    field={field}
-                    index={idx}
-                    formTheme={formTheme}
-                  />
-                ))
-              )}
-            </div>
-
             {/* Multi-Page Navigation Controls */}
-            <div className="flex items-center justify-between pt-4 border-t border-slate-200/50">
+            <div className="flex items-center justify-between pt-4 border-t border-slate-200/50 z-10 bg-inherit">
               <button
                 type="button"
-                disabled={activePageIndex === 0}
-                onClick={() => setActivePageIndex((p) => Math.max(0, p - 1))}
+                disabled={previewPageIndex === 0}
+                onClick={() => setPreviewPageIndex((p) => Math.max(0, p - 1))}
                 className="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 disabled:opacity-40 flex items-center gap-1 hover:bg-slate-50 transition-colors"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
@@ -2021,9 +2089,9 @@ function BuildFormContent() {
 
               <button
                 type="button"
-                disabled={activePageIndex >= pages.length - 1}
-                onClick={() => setActivePageIndex((p) => Math.min(pages.length - 1, p + 1))}
-                style={{ backgroundColor: formTheme.accentColor || "#0d5c41" }}
+                disabled={previewPageIndex >= pages.length - 1}
+                onClick={() => setPreviewPageIndex((p) => Math.min(pages.length - 1, p + 1))}
+                style={{ backgroundColor: formTheme.accentColor || "#16a34a" }}
                 className="px-4 py-2 rounded-xl text-xs font-bold text-white disabled:opacity-40 flex items-center gap-1 hover:opacity-90 transition-all cursor-pointer shadow-md"
               >
                 <span>Next Page</span>
@@ -2036,7 +2104,7 @@ function BuildFormContent() {
 
       {/* Save Success Toast Banner */}
       {saveSuccessMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#0d5c41] text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-bold animate-fadeIn border border-emerald-400/30">
+        <div className="fixed bottom-6 right-6 z-50 bg-[#16a34a] text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-bold animate-fadeIn border border-emerald-400/30">
           <Check className="w-4 h-4 text-emerald-300 shrink-0" />
           <span>{saveSuccessMessage}</span>
         </div>
@@ -2054,7 +2122,7 @@ function BuildFormContent() {
               <X className="w-4 h-4" />
             </button>
 
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-[#0d5c41] border border-emerald-100 flex items-center justify-center mx-auto shadow-xs">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-[#16a34a] border border-emerald-100 flex items-center justify-center mx-auto shadow-xs">
               <FileText className="w-6 h-6" />
             </div>
 
@@ -2062,7 +2130,7 @@ function BuildFormContent() {
               <h3 className="text-xl font-black text-slate-900 tracking-tight">Save Form Draft?</h3>
               <p className="text-xs text-slate-500 font-medium leading-relaxed">
                 Would you like to save this form's layout, fields, and flow as a{" "}
-                <span className="font-bold text-[#0d5c41]">Draft</span> in your database before
+                <span className="font-bold text-[#16a34a]">Draft</span> in your database before
                 leaving?
               </p>
             </div>
@@ -2071,8 +2139,8 @@ function BuildFormContent() {
               <button
                 type="button"
                 disabled={isSavingDraft}
-                onClick={() => handleSaveFormDraft("drafted", true)}
-                className="w-full py-3 px-4 rounded-2xl bg-[#0d5c41] hover:bg-[#065f46] text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                onClick={() => handleSaveFormDraft("drafted", true).catch(() => {})}
+                className="w-full py-3 px-4 rounded-2xl bg-[#16a34a] hover:bg-[#065f46] text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {isSavingDraft ? (
                   <>
@@ -2119,7 +2187,7 @@ function BuildFormContent() {
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-[#0d5c41] border border-emerald-100 flex items-center justify-center font-black">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-[#16a34a] border border-emerald-100 flex items-center justify-center font-black">
                   <Check className="w-5 h-5" />
                 </div>
                 <div>
@@ -2146,12 +2214,12 @@ function BuildFormContent() {
               <div className="flex flex-col items-center justify-center p-14 text-center space-y-6 animate-fadeIn">
                 <div className="relative flex items-center justify-center w-24 h-24">
                   {/* Outer spinning glow ring */}
-                  <div className="absolute inset-0 rounded-full border border-dashed border-[#0d5c41]/35 animate-spin" />
+                  <div className="absolute inset-0 rounded-full border border-dashed border-[#16a34a]/35 animate-spin" />
                   {/* Middle pulsing ring */}
                   <div className="absolute inset-2 rounded-full border border-[#134e3b]/30 animate-pulse" />
                   {/* Center circle */}
                   <div className="absolute inset-4 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center shadow-lg">
-                    <Sparkles className="w-7 h-7 text-[#0d5c41] animate-bounce" />
+                    <Sparkles className="w-7 h-7 text-[#16a34a] animate-bounce" />
                   </div>
                 </div>
 
@@ -2170,16 +2238,55 @@ function BuildFormContent() {
                   {/* Gradient progress bar indicator */}
                   <div className="w-56 bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200 mt-2">
                     <div
-                      className="bg-gradient-to-r from-emerald-500 via-[#0d5c41] to-emerald-400 h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+                      className="bg-gradient-to-r from-emerald-500 via-[#16a34a] to-emerald-400 h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_8px_rgba(16,185,129,0.3)]"
                       style={{ width: `${((publishStage + 1) / 3) * 100}%` }}
                     />
                   </div>
                 </div>
               </div>
+            ) : publishError ? (
+              <div className="flex flex-col items-center justify-center p-8 sm:p-10 text-center space-y-6 animate-fadeIn select-text">
+                <div className="w-16 h-16 rounded-3xl bg-red-50 text-red-600 border border-red-200 flex items-center justify-center shadow-lg animate-bounce">
+                  <AlertTriangle className="w-10 h-10 text-red-600" />
+                </div>
+
+                <div className="space-y-1.5 max-w-md">
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">
+                    Publishing Failed
+                  </h3>
+                  <p className="text-xs text-red-500 font-semibold bg-red-50 border border-red-200/50 p-4 rounded-2xl leading-relaxed whitespace-pre-wrap">
+                    {publishError}
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-md pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPublishError(null);
+                      handleConfirmPublishLive();
+                    }}
+                    className="w-full py-3 px-5 rounded-2xl bg-[#16a34a] hover:bg-[#065f46] text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    Try Again
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPublishError(null);
+                      setIsPublishModalOpen(false);
+                    }}
+                    className="w-full py-3 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+                  >
+                    Close Modal
+                  </button>
+                </div>
+              </div>
             ) : isPublishSuccess ? (
               <div className="flex flex-col items-center justify-center p-8 sm:p-10 text-center space-y-6 animate-fadeIn">
-                <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-[#0d5c41] border border-emerald-200 flex items-center justify-center shadow-lg animate-bounce">
-                  <CheckCircle2 className="w-10 h-10 text-[#0d5c41]" />
+                <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-[#16a34a] border border-emerald-200 flex items-center justify-center shadow-lg animate-bounce">
+                  <CheckCircle2 className="w-10 h-10 text-[#16a34a]" />
                 </div>
 
                 <div className="space-y-1.5 max-w-md">
@@ -2217,7 +2324,7 @@ function BuildFormContent() {
                           setCopiedLink(true);
                           setTimeout(() => setCopiedLink(false), 2000);
                         }}
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-[#0d5c41] hover:bg-slate-100 transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-[#16a34a] hover:bg-slate-100 transition-colors cursor-pointer"
                         title="Copy link"
                       >
                         {copiedLink ? (
@@ -2230,7 +2337,7 @@ function BuildFormContent() {
                         href={`/submit/${savedFormId || ""}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-[#0d5c41] hover:bg-slate-100 transition-colors"
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-[#16a34a] hover:bg-slate-100 transition-colors"
                         title="Open submission page in new tab"
                       >
                         <ExternalLink className="w-4 h-4" />
@@ -2247,7 +2354,7 @@ function BuildFormContent() {
                       setIsPublishModalOpen(false);
                       router.push("/getstarted");
                     }}
-                    className="w-full py-3 px-5 rounded-2xl bg-[#0d5c41] hover:bg-[#065f46] text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-3 px-5 rounded-2xl bg-[#16a34a] hover:bg-[#065f46] text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span>Go to Dashboard & Submissions</span>
                     <ExternalLink className="w-4 h-4" />
@@ -2274,7 +2381,7 @@ function BuildFormContent() {
                     onClick={() => setPublishTab("preview")}
                     className={`px-4 py-2 rounded-t-xl font-bold text-xs flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
                       publishTab === "preview"
-                        ? "border-[#0d5c41] text-[#0d5c41] bg-white shadow-2xs"
+                        ? "border-[#16a34a] text-[#16a34a] bg-white shadow-2xs"
                         : "border-transparent text-slate-500 hover:text-slate-800"
                     }`}
                   >
@@ -2287,7 +2394,7 @@ function BuildFormContent() {
                     onClick={() => setPublishTab("theme")}
                     className={`px-4 py-2 rounded-t-xl font-bold text-xs flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
                       publishTab === "theme"
-                        ? "border-[#0d5c41] text-[#0d5c41] bg-white shadow-2xs"
+                        ? "border-[#16a34a] text-[#16a34a] bg-white shadow-2xs"
                         : "border-transparent text-slate-500 hover:text-slate-800"
                     }`}
                   >
@@ -2300,7 +2407,7 @@ function BuildFormContent() {
                     onClick={() => setPublishTab("settings")}
                     className={`px-4 py-2 rounded-t-xl font-bold text-xs flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
                       publishTab === "settings"
-                        ? "border-[#0d5c41] text-[#0d5c41] bg-white shadow-2xs"
+                        ? "border-[#16a34a] text-[#16a34a] bg-white shadow-2xs"
                         : "border-transparent text-slate-500 hover:text-slate-800"
                     }`}
                   >
@@ -2322,7 +2429,7 @@ function BuildFormContent() {
                         style={{
                           backgroundColor: formTheme.cardBackgroundColor || "#ffffff",
                           color: formTheme.textColor || "#0f172a",
-                          borderColor: `${formTheme.accentColor || "#0d5c41"}35`,
+                          borderColor: `${formTheme.accentColor || "#16a34a"}35`,
                         }}
                       >
                         <div className="text-center space-y-1 pb-4 border-b border-slate-200/40">
@@ -2375,7 +2482,7 @@ function BuildFormContent() {
                                 onClick={() => setFormTheme(theme)}
                                 className={`p-3 rounded-2xl border text-xs font-bold flex items-center justify-between transition-all cursor-pointer ${
                                   isActive
-                                    ? "border-[#0d5c41] bg-emerald-50/60 text-[#0d5c41] ring-1 ring-[#0d5c41]"
+                                    ? "border-[#16a34a] bg-emerald-50/60 text-[#16a34a] ring-1 ring-[#16a34a]"
                                     : "border-slate-200 hover:bg-slate-50 text-slate-700"
                                 }`}
                               >
@@ -2391,7 +2498,7 @@ function BuildFormContent() {
                                   </div>
                                   <span>{theme.name}</span>
                                 </div>
-                                {isActive && <Check className="w-3.5 h-3.5 text-[#0d5c41]" />}
+                                {isActive && <Check className="w-3.5 h-3.5 text-[#16a34a]" />}
                               </button>
                             );
                           })}
@@ -2437,7 +2544,7 @@ function BuildFormContent() {
 
                         <div className="flex items-center justify-between text-xs font-semibold text-slate-700 pt-2 border-t border-slate-100">
                           <div className="flex items-center gap-1.5">
-                            <Globe className="w-4 h-4 text-[#0d5c41]" />
+                            <Globe className="w-4 h-4 text-[#16a34a]" />
                             <span>Form Language</span>
                           </div>
                           <select
@@ -2477,7 +2584,7 @@ function BuildFormContent() {
                 {/* Modal Footer: Live Submission URL Copy & Confirm Publish */}
                 <div className="px-6 py-4 border-t border-slate-200 bg-white flex flex-col sm:flex-row items-center justify-between gap-3">
                   <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl w-full sm:w-auto">
-                    <Globe className="w-3.5 h-3.5 text-[#0d5c41] shrink-0" />
+                    <Globe className="w-3.5 h-3.5 text-[#16a34a] shrink-0" />
                     <span className="text-xs font-mono font-bold text-slate-700 truncate max-w-xs select-all">
                       {typeof window !== "undefined"
                         ? `${window.location.origin}/submit/${savedFormId || ""}`
@@ -2496,7 +2603,7 @@ function BuildFormContent() {
                         setCopiedLink(true);
                         setTimeout(() => setCopiedLink(false), 2000);
                       }}
-                      className="p-1 text-slate-400 hover:text-[#0d5c41] transition-colors shrink-0 cursor-pointer"
+                      className="p-1 text-slate-400 hover:text-[#16a34a] transition-colors shrink-0 cursor-pointer"
                       title="Copy submission link"
                     >
                       {copiedLink ? (
@@ -2509,7 +2616,7 @@ function BuildFormContent() {
                       href={`/submit/${savedFormId || ""}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-1 text-slate-400 hover:text-[#0d5c41] transition-colors shrink-0"
+                      className="p-1 text-slate-400 hover:text-[#16a34a] transition-colors shrink-0"
                       title="Open submission page"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -2529,7 +2636,7 @@ function BuildFormContent() {
                       type="button"
                       disabled={isSavingDraft || isPublishing}
                       onClick={handleConfirmPublishLive}
-                      className="px-5 py-2 rounded-xl bg-[#0d5c41] hover:bg-[#065f46] text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      className="px-5 py-2 rounded-xl bg-[#16a34a] hover:bg-[#065f46] text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                     >
                       {isSavingDraft || isPublishing ? (
                         <>

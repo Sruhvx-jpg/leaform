@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Loader2,
@@ -22,6 +22,9 @@ export default function PublicSubmitFormPage() {
 
   const [activePageIndex, setActivePageIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
+  const changePage = useCallback((targetIndex: number) => {
+    setActivePageIndex(targetIndex);
+  }, []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
@@ -56,7 +59,7 @@ export default function PublicSubmitFormPage() {
       backgroundColor: theme.backgroundColor || "#092218",
       cardBackgroundColor: theme.cardBackgroundColor || "#0e2c20",
       textColor: theme.textColor || "#ffffff",
-      accentColor: theme.accentColor || "#0d5c41",
+      accentColor: theme.accentColor || "#16a34a",
       language: theme.language || "en",
       pages: theme.pages || [{ id: 1, title: "Page 1" }],
     };
@@ -136,24 +139,20 @@ export default function PublicSubmitFormPage() {
     return [{ id: 1, title: "Page 1" }];
   }, [formTheme.pages]);
 
-  const currentPageFields = useMemo(() => {
+  const getPageFields = useCallback((pIdx: number) => {
     if (pages.length <= 1) return fields;
-    const pageId = pages[activePageIndex]?.id || activePageIndex + 1;
-    // Map fields by page offset if available or distribute evenly
-    const fieldsPerPage = Math.ceil(fields.length / pages.length) || 1;
-    const start = activePageIndex * fieldsPerPage;
-    return fields.slice(start, start + fieldsPerPage);
-  }, [fields, pages, activePageIndex]);
+    return fields.filter((field: any) => {
+      const pageIndex = Math.floor((field.orderIndex ?? 0) / 100);
+      return pageIndex === pIdx;
+    });
+  }, [fields, pages]);
 
   const handleFieldChange = (fieldId: string, val: any) => {
     setAnswers((prev) => ({ ...prev, [fieldId]: val }));
   };
 
-  const validatePage = (pageIdx: number): boolean => {
-    const pageId = pages[pageIdx]?.id || pageIdx + 1;
-    const fieldsPerPage = Math.ceil(fields.length / pages.length) || 1;
-    const start = pageIdx * fieldsPerPage;
-    const pageFields = fields.slice(start, start + fieldsPerPage);
+  const validatePage = useCallback((pageIdx: number): boolean => {
+    const pageFields = getPageFields(pageIdx);
 
     for (const field of pageFields) {
       const isReq = field.isRequired ?? field.required ?? false;
@@ -165,7 +164,7 @@ export default function PublicSubmitFormPage() {
       }
     }
     return true;
-  };
+  }, [getPageFields, answers]);
 
   const handleNextPage = () => {
     setSubmissionError(null);
@@ -173,7 +172,7 @@ export default function PublicSubmitFormPage() {
       setSubmissionError("Please answer all required questions on this page.");
       return;
     }
-    setActivePageIndex((p) => Math.min(pages.length - 1, p + 1));
+    changePage(activePageIndex + 1);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -354,207 +353,228 @@ export default function PublicSubmitFormPage() {
     >
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-xl p-6 sm:p-10 rounded-xl border shadow-2xl flex flex-col gap-6"
+        className="w-full max-w-xl p-6 sm:p-10 rounded-xl border shadow-2xl flex flex-col gap-6 transition-colors duration-300 overflow-hidden"
         style={{
           backgroundColor: formTheme.cardBackgroundColor,
           color: formTheme.textColor,
           borderColor: `${formTheme.accentColor}35`,
         }}
       >
-        {/* Header Title */}
-        <div
-          className={`text-center space-y-1.5 pb-4 border-b ${isDark ? "border-white/10" : "border-slate-200/80"}`}
-        >
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">{data.form.title}</h1>
-          {data.form.description && (
-            <p className="text-xs opacity-70 leading-relaxed max-w-md mx-auto">
-              {data.form.description}
-            </p>
-          )}
-          {pages.length > 1 && (
-            <div
-              className={`inline-block mt-2 px-3 py-1 rounded-md text-[10px] font-extrabold ${
-                isDark ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"
-              }`}
-            >
-              Page {activePageIndex + 1} of {pages.length}
-            </div>
-          )}
-        </div>
-
-        {/* Error Banner */}
-        {submissionError && (
-          <div className="p-3.5 rounded-md bg-red-500/20 text-red-200 border border-red-500/30 text-xs font-semibold flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
-            <span>{submissionError}</span>
-          </div>
-        )}
-
-        {/* Fields List */}
-        <div className="space-y-6 min-h-[160px]">
-          {currentPageFields.length === 0 ? (
-            <p className="text-xs opacity-60 text-center py-6">No questions on this page.</p>
-          ) : (
-            currentPageFields.map((field: any, idx: number) => {
-              const val = answers[field.id] || "";
-              const fType = field.fieldType || field.type || "short_text";
-              const isReq = field.isRequired ?? field.required ?? false;
+        {/* Pages Slider Wrapper */}
+        <div className="w-full overflow-hidden relative flex-1">
+          <div
+            className="transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex"
+            style={{
+              transform: `translateX(-${(activePageIndex * 100) / pages.length}%)`,
+              width: `${pages.length * 100}%`,
+            }}
+          >
+            {pages.map((page: any, pIdx: number) => {
+              const pageFields = getPageFields(pIdx);
 
               return (
                 <div
-                  key={field.id || idx}
-                  className={`space-y-2.5 p-4 rounded-md border transition-all ${
-                    isDark ? "bg-white/5 border-white/10" : "bg-slate-50 border-slate-200/60"
-                  }`}
+                  key={page.id || pIdx}
+                  className="w-full shrink-0 flex flex-col gap-6"
+                  style={{ width: `${100 / pages.length}%` }}
                 >
-                  <label className="block text-xs sm:text-sm font-bold tracking-wide">
-                    {field.label || `Question ${idx + 1}`}
-                    {isReq && <span className="text-red-400 font-bold ml-1">*</span>}
-                  </label>
+                  {/* Header Title */}
+                  <div
+                    className={`text-center space-y-1.5 pb-4 border-b ${isDark ? "border-white/10" : "border-slate-200/80"}`}
+                  >
+                    <h1 className="text-2xl sm:text-3xl font-black tracking-tight">{data.form.title}</h1>
+                    {data.form.description && (
+                      <p className="text-xs opacity-70 leading-relaxed max-w-md mx-auto">
+                        {data.form.description}
+                      </p>
+                    )}
+                    {pages.length > 1 && (
+                      <div
+                        className={`inline-block mt-2 px-3 py-1 rounded-md text-[10px] font-extrabold ${
+                          isDark ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"
+                        }`}
+                      >
+                        Page {pIdx + 1} of {pages.length}
+                      </div>
+                    )}
+                  </div>
 
-                  {field.description && (
-                    <p className="text-[11px] opacity-60 leading-snug">{field.description}</p>
+                  {/* Error Banner */}
+                  {submissionError && activePageIndex === pIdx && (
+                    <div className="p-3.5 rounded-md bg-red-500/20 text-red-200 border border-red-500/30 text-xs font-semibold flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+                      <span>{submissionError}</span>
+                    </div>
                   )}
 
-                  {/* Render Input by Type */}
-                  {fType === "long_text" || fType === "rich_text" ? (
-                    <textarea
-                      rows={3}
-                      value={val}
-                      required={isReq}
-                      onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                      placeholder={field.placeholder || "Type your response..."}
-                      className={`w-full px-3.5 py-2.5 text-xs rounded-md border focus:outline-none focus:border-emerald-400 transition-all ${
-                        isDark
-                          ? "bg-white/10 border-white/20 text-white placeholder-white/30"
-                          : "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-1 focus:ring-emerald-500/20"
-                      }`}
-                    />
-                  ) : fType === "multiple_choice" || fType === "dropdown" ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                      {(field.options || ["Option 1", "Option 2"]).map(
-                        (opt: string, oIdx: number) => {
-                          const isSelected = val === opt;
-                          return (
-                            <button
-                              key={oIdx}
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                handleFieldChange(field.id, opt);
-                              }}
-                              className={`px-3.5 py-2.5 rounded-md border text-xs font-bold transition-all text-left flex items-center justify-between cursor-pointer ${
-                                isSelected
-                                  ? isDark
-                                    ? "bg-emerald-500/20 border-emerald-400 text-white"
-                                    : "bg-emerald-50/80 border-emerald-500 text-emerald-800"
-                                  : isDark
-                                    ? "bg-white/5 border-white/15 hover:bg-white/10 text-white/80"
-                                    : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
-                              }`}
-                            >
-                              <span>{opt}</span>
-                              {isSelected && (
-                                <CheckCircle2
-                                  className={`w-3.5 h-3.5 shrink-0 ${isDark ? "text-emerald-400" : "text-emerald-600"}`}
-                                />
-                              )}
-                            </button>
-                          );
-                        },
-                      )}
-                    </div>
-                  ) : fType === "rating" ? (
-                    <div className="flex items-center gap-1.5 pt-1">
-                      {[1, 2, 3, 4, 5].map((star) => {
-                        const active = Number(val) >= star;
+                  {/* Fields List */}
+                  <div className="space-y-6 min-h-[160px]">
+                    {pageFields.length === 0 ? (
+                      <p className="text-xs opacity-60 text-center py-6">No questions on this page.</p>
+                    ) : (
+                      pageFields.map((field: any, idx: number) => {
+                        const val = answers[field.id] || "";
+                        const fType = field.fieldType || field.type || "short_text";
+                        const isReq = field.isRequired ?? field.required ?? false;
+
                         return (
-                          <button
-                            key={star}
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleFieldChange(field.id, star);
-                            }}
-                            className="p-1 rounded-md hover:scale-110 transition-transform cursor-pointer focus:outline-none"
+                          <div
+                            key={field.id || idx}
+                            className="w-full py-6 space-y-4 transition-all"
                           >
-                            <Star
-                              className={`w-7 h-7 transition-colors ${
-                                active
-                                  ? "text-amber-400 fill-amber-400 drop-shadow-sm"
-                                  : isDark
-                                    ? "text-white/20 hover:text-amber-300"
-                                    : "text-slate-300 hover:text-amber-400"
-                              }`}
-                            />
-                          </button>
+                            <label className="block text-xs sm:text-sm font-bold tracking-wide">
+                              {field.label || `Question ${idx + 1}`}
+                              {isReq && <span className="text-red-400 font-bold ml-1">*</span>}
+                            </label>
+
+                            {field.description && (
+                              <p className="text-[11px] opacity-60 leading-snug">{field.description}</p>
+                            )}
+
+                            {/* Render Input by Type */}
+                            {fType === "long_text" || fType === "rich_text" ? (
+                              <textarea
+                                rows={3}
+                                value={val}
+                                required={isReq}
+                                onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                                placeholder={field.placeholder || "Type your response..."}
+                                className={`w-full px-3.5 py-2.5 text-xs rounded-md border focus:outline-none focus:border-emerald-400 transition-all ${
+                                  isDark
+                                    ? "bg-white/10 border-white/20 text-white placeholder-white/30"
+                                    : "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-1 focus:ring-emerald-500/20"
+                                }`}
+                              />
+                            ) : fType === "multiple_choice" || fType === "dropdown" ? (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                                {(field.options || ["Option 1", "Option 2"]).map(
+                                  (opt: string, oIdx: number) => {
+                                    const isSelected = val === opt;
+                                    return (
+                                      <button
+                                        key={oIdx}
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          handleFieldChange(field.id, opt);
+                                        }}
+                                        className={`px-3.5 py-2.5 rounded-md border text-xs font-bold transition-all text-left flex items-center justify-between cursor-pointer ${
+                                          isSelected
+                                            ? isDark
+                                              ? "bg-emerald-500/20 border-emerald-400 text-white"
+                                              : "bg-emerald-50/80 border-emerald-500 text-emerald-800"
+                                            : isDark
+                                              ? "bg-white/5 border-white/15 hover:bg-white/10 text-white/80"
+                                              : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
+                                        }`}
+                                      >
+                                        <span>{opt}</span>
+                                        {isSelected && (
+                                          <CheckCircle2
+                                            className={`w-3.5 h-3.5 shrink-0 ${isDark ? "text-emerald-400" : "text-emerald-600"}`}
+                                          />
+                                        )}
+                                      </button>
+                                    );
+                                  },
+                                )}
+                              </div>
+                            ) : fType === "rating" ? (
+                              <div className="flex items-center gap-1.5 pt-1">
+                                {[1, 2, 3, 4, 5].map((star) => {
+                                  const active = Number(val) >= star;
+                                  return (
+                                    <button
+                                      key={star}
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        handleFieldChange(field.id, star);
+                                      }}
+                                      className="p-1 rounded-md hover:scale-110 transition-transform cursor-pointer focus:outline-none"
+                                    >
+                                      <Star
+                                        className={`w-7 h-7 transition-colors ${
+                                          active
+                                            ? "text-amber-400 fill-amber-400 drop-shadow-sm"
+                                            : isDark
+                                              ? "text-white/20 hover:text-amber-300"
+                                              : "text-slate-300 hover:text-amber-400"
+                                        }`}
+                                      />
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            ) : fType === "nps" || fType === "opinion_scale" ? (
+                              <div className="flex items-center gap-1 overflow-x-auto py-1">
+                                {Array.from({ length: 11 }, (_, i) => i).map((num) => {
+                                  const isSelected = val === num || Number(val) === num;
+                                  return (
+                                    <button
+                                      key={num}
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        handleFieldChange(field.id, num);
+                                      }}
+                                      style={
+                                        isSelected
+                                          ? {
+                                              backgroundColor: formTheme.accentColor,
+                                              borderColor: formTheme.accentColor,
+                                              color: "#ffffff",
+                                            }
+                                          : {}
+                                      }
+                                      className={`w-9 h-9 rounded-md border text-xs font-black flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+                                        isSelected
+                                          ? "shadow-md scale-105"
+                                          : isDark
+                                            ? "bg-white/10 border-white/20 text-white hover:bg-white/20"
+                                            : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200 hover:border-slate-300"
+                                      }`}
+                                    >
+                                      {num}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <input
+                                type={
+                                  fType === "email"
+                                    ? "email"
+                                    : fType === "number"
+                                      ? "number"
+                                      : fType === "phone_number" || fType === "phone"
+                                        ? "tel"
+                                        : fType === "url"
+                                          ? "url"
+                                          : fType === "date"
+                                            ? "date"
+                                            : "text"
+                                }
+                                value={val}
+                                required={isReq}
+                                onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                                placeholder={field.placeholder || "Your answer..."}
+                                className={`w-full px-3.5 py-2.5 text-xs rounded-md border focus:outline-none focus:border-emerald-400 transition-all ${
+                                  isDark
+                                    ? "bg-white/10 border-white/20 text-white placeholder-white/30"
+                                    : "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-1 focus:ring-emerald-500/20"
+                                }`}
+                              />
+                            )}
+                          </div>
                         );
-                      })}
-                    </div>
-                  ) : fType === "nps" || fType === "opinion_scale" ? (
-                    <div className="flex items-center gap-1 overflow-x-auto py-1">
-                      {Array.from({ length: 11 }, (_, i) => i).map((num) => {
-                        const isSelected = val === num || Number(val) === num;
-                        return (
-                          <button
-                            key={num}
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleFieldChange(field.id, num);
-                            }}
-                            style={
-                              isSelected
-                                ? {
-                                    backgroundColor: formTheme.accentColor,
-                                    borderColor: formTheme.accentColor,
-                                    color: "#ffffff",
-                                  }
-                                : {}
-                            }
-                            className={`w-9 h-9 rounded-md border text-xs font-black flex items-center justify-center transition-all cursor-pointer shrink-0 ${
-                              isSelected
-                                ? "shadow-md scale-105"
-                                : isDark
-                                  ? "bg-white/10 border-white/20 text-white hover:bg-white/20"
-                                  : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200 hover:border-slate-300"
-                            }`}
-                          >
-                            {num}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <input
-                      type={
-                        fType === "email"
-                          ? "email"
-                          : fType === "number"
-                            ? "number"
-                            : fType === "phone_number" || fType === "phone"
-                              ? "tel"
-                              : fType === "url"
-                                ? "url"
-                                : fType === "date"
-                                  ? "date"
-                                  : "text"
-                      }
-                      value={val}
-                      required={isReq}
-                      onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                      placeholder={field.placeholder || "Your answer..."}
-                      className={`w-full px-3.5 py-2.5 text-xs rounded-md border focus:outline-none focus:border-emerald-400 transition-all ${
-                        isDark
-                          ? "bg-white/10 border-white/20 text-white placeholder-white/30"
-                          : "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:ring-1 focus:ring-emerald-500/20"
-                      }`}
-                    />
-                  )}
+                      })
+                    )}
+                  </div>
                 </div>
               );
-            })
-          )}
+            })}
+          </div>
         </div>
 
         {/* Footer Navigation & Submit Button */}
@@ -567,7 +587,7 @@ export default function PublicSubmitFormPage() {
               disabled={activePageIndex === 0}
               onClick={(e) => {
                 e.preventDefault();
-                setActivePageIndex((p) => Math.max(0, p - 1));
+                changePage(activePageIndex - 1);
               }}
               className={`px-4 py-2 rounded-md text-xs font-bold border disabled:opacity-30 flex items-center gap-1 transition-colors ${
                 isDark
@@ -588,7 +608,7 @@ export default function PublicSubmitFormPage() {
                 handleNextPage();
               }}
               style={{ backgroundColor: formTheme.accentColor }}
-              className="ml-auto px-5 py-2.5 rounded-md text-xs font-extrabold text-white flex items-center gap-1.5 hover:opacity-90 transition-all cursor-pointer shadow-md"
+              className="ml-auto px-5 py-2.5 rounded-md text-xs font-extrabold text-white flex items-center gap-1.5 hover:opacity-90 disabled:opacity-50 transition-all cursor-pointer shadow-md"
             >
               <span>Next Page</span>
               <ChevronRight className="w-4 h-4" />
