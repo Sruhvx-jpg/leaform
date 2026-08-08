@@ -1,18 +1,26 @@
-import { pgTable, uuid, integer, text } from "drizzle-orm/pg-core";
-import { formFieldsTable } from "./formFields";
+import { pgTable, uuid, text, boolean, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { formsTable } from "../form";
+import { FieldStyleConfig, FieldValidationConfig } from "./config/fieldConfig";
 
-export const textFieldConfigsTable = pgTable("leaf_field_text_configs", {
+export const textFieldTable = pgTable("leaf_form_text_fields", {
   id: uuid("id").primaryKey().defaultRandom(),
-  fieldId: uuid("field_id")
-    .notNull()
-    .unique()
-    .references(() => formFieldsTable.id, { onDelete: "cascade" }),
 
-  minLength: integer("min_length"),
-  maxLength: integer("max_length"),
-  regexPattern: text("regex_pattern"),
-  errorMessage: text("error_message"),
+  formId: uuid("form_id")
+    .notNull()
+    .references(() => formsTable.id, { onDelete: "cascade" }),
+
+  label: text("label").notNull(),
+  description: text("description"),
+  placeholder: text("placeholder"),
+  isRequired: boolean("is_required").default(true).notNull(),
+  orderIndex: integer("order_index").notNull().default(0),
+  style: jsonb("style").$type<FieldStyleConfig>(),
+  validationRules: jsonb("validation_rules").$type<FieldValidationConfig>(),
+  defaultValue: text("default_value"),
+
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),
 });
 
-export type SelectTextFieldConfig = typeof textFieldConfigsTable.$inferSelect;
-export type InsertTextFieldConfig = typeof textFieldConfigsTable.$inferInsert;
+export type SelectTextField = typeof textFieldTable.$inferSelect;
+export type InsertTextField = typeof textFieldTable.$inferInsert;

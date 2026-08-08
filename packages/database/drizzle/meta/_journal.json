@@ -15,6 +15,20 @@
       "when": 1786185548178,
       "tag": "0001_fair_lady_vermin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786215915574,
+      "tag": "0002_narrow_mad_thinker",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1786216151892,
+      "tag": "0003_shiny_stranger",
+      "breakpoints": true
     }
   ]
 }
