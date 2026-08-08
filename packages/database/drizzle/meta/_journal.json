@@ -5,36 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1786024039559,
-      "tag": "0000_red_stranger",
+      "when": 1786174655166,
+      "tag": "0000_stale_rockslide",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1786027029380,
-      "tag": "0001_short_iron_man",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1786027068473,
-      "tag": "0002_tidy_devos",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1786030313920,
-      "tag": "0003_petite_darkstar",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1786114557739,
-      "tag": "0004_orange_mordo",
+      "when": 1786185548178,
+      "tag": "0001_fair_lady_vermin",
       "breakpoints": true
     }
   ]

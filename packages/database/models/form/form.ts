@@ -1,5 +1,6 @@
 import { pgEnum, pgTable, uuid, varchar, text, jsonb, timestamp } from "drizzle-orm/pg-core";
 import { usersTable } from "../user/user";
+import { workspacesTable } from "../workspace/workspace";
 
 export const formStateEnum = pgEnum("form_state", ["drafted", "published", "closed"]);
 
@@ -25,6 +26,9 @@ export const formsTable = pgTable("leaf_forms", {
   ownerId: uuid("owner_id")
     .notNull()
     .references(() => usersTable.id, { onDelete: "cascade" }),
+
+  workspaceId: uuid("workspace_id")
+    .references(() => workspacesTable.id, { onDelete: "cascade" }),
 
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),

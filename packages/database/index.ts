@@ -5,7 +5,6 @@ import { env } from "./env";
 
 const pool = new Pool({
   connectionString: env.DATABASE_URL,
-  options: "-c search_path=public",
 });
 
 export const db = drizzle({ client: pool });
