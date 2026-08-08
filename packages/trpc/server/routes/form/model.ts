@@ -13,17 +13,11 @@ export const formItemModel = z.object({
 
 export const getUserFormsOutputModel = z.union([z.array(formItemModel), z.literal(0)]);
 
-export const fieldTypeMetadataModel = z.object({
-  type: z.string(),
-  name: z.string(),
-  category: z.string(),
-  icon: z.string(),
-});
 
-export const getAvailableFieldTypesOutputModel = z.array(fieldTypeMetadataModel);
 
 export const saveFormInputModel = z.object({
   id: z.string().optional(),
+  workspaceId: z.string().uuid(),
   title: z.string(),
   description: z.string().optional(),
   state: z.enum(["drafted", "published", "closed"]).optional(),
@@ -56,6 +50,7 @@ export const saveFormInputModel = z.object({
         })
         .optional(),
       options: z.array(z.string()).optional(),
+      orderIndex: z.number().optional(),
     }),
   ),
 });
@@ -103,4 +98,8 @@ export const submitFormResponseInputModel = z.object({
 export const submitFormResponseOutputModel = z.object({
   success: z.boolean(),
   id: z.string().optional(),
+});
+
+export const getFormSubmissionsInputModel = z.object({
+  formId: z.string(),
 });

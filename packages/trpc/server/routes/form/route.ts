@@ -1,10 +1,10 @@
+import { z } from "zod";
 import { zodUndefinedModel } from "../../schema";
 import { formService } from "../../services";
 import { TokenBasedProcedure, publicProcedure, router } from "../../trpc";
 import { generatePath } from "../../utils/path-generator";
 import {
   getUserFormsOutputModel,
-  getAvailableFieldTypesOutputModel,
   saveFormInputModel,
   saveFormOutputModel,
   deleteFormInputModel,
@@ -13,6 +13,7 @@ import {
   getPublicFormOutputModel,
   submitFormResponseInputModel,
   submitFormResponseOutputModel,
+  getFormSubmissionsInputModel,
 } from "./model";
 
 const TAGS = ["Forms"];
@@ -22,11 +23,11 @@ export const formRouter = router({
   getUserForms: TokenBasedProcedure.meta({
     openapi: { method: "GET", path: getPath("/user-forms"), tags: TAGS },
   })
-    .input(zodUndefinedModel)
+    .input(z.object({ workspaceId: z.string().uuid() }))
     .output(getUserFormsOutputModel)
-    .query(async ({ ctx }) => {
+    .query(async ({ ctx, input }) => {
       try {
-        const result = await formService.getUserForms(ctx.user.sub);
+        const result = await formService.getUserForms(ctx.user.sub, input.workspaceId);
         return result;
       } catch (error) {
         throw error;
@@ -50,18 +51,6 @@ export const formRouter = router({
       }
     }),
 
-  getAvailableFieldTypes: publicProcedure
-    .meta({ openapi: { method: "GET", path: getPath("/available-field-types"), tags: TAGS } })
-    .input(zodUndefinedModel)
-    .output(getAvailableFieldTypesOutputModel)
-    .query(async () => {
-      try {
-        const result = await formService.getAvailableFieldTypes();
-        return result;
-      } catch (error) {
-        throw error;
-      }
-    }),
 
   deleteForm: TokenBasedProcedure.meta({
     openapi: { method: "POST", path: getPath("/delete"), tags: TAGS },
@@ -98,6 +87,20 @@ export const formRouter = router({
       try {
         const res = await formService.submitFormResponse(input.formId, input.answers, ctx.req.ip);
         return { success: true, id: res?.id ?? undefined };
+      } catch (error) {
+        throw error;
+      }
+    }),
+
+  getFormSubmissions: TokenBasedProcedure.meta({
+    openapi: { method: "GET", path: getPath("/submissions"), tags: TAGS },
+  })
+    .input(getFormSubmissionsInputModel)
+    .output(z.any())
+    .query(async ({ ctx, input }) => {
+      try {
+        const result = await formService.getFormSubmissions(ctx.user.sub, input.formId);
+        return result;
       } catch (error) {
         throw error;
       }
