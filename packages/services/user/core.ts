@@ -6,8 +6,28 @@
 import { eq } from "drizzle-orm";
 
 // in house modules
-import db, { usersTable, refreshTokensTable, InsertUser, InsertRefreshToken } from "@repo/database";
+import db, {
+  usersTable,
+  refreshTokensTable,
+  InsertUser,
+  InsertRefreshToken,
+  workspacesTable,
+  workspaceMembersTable,
+} from "@repo/database";
 import { apiErr, hashIT, comparePass, generateAccTok, generateRefTok } from "@repo/utils";
+
+function generateInviteCode(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "LF-";
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  code += "-";
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
 
 // current working directory files
 import { SignupUserInput, SignupUserInputType, LoginUserInput, LoginUserInputType } from "./model";
@@ -33,6 +53,11 @@ class UserService {
 
       return user || null;
     } catch (error) {
+      console.error("DATABASE ERROR in findUserById:", error);
+      if (error && typeof error === "object") {
+        console.error("DATABASE ERROR CAUSE:", (error as any).cause);
+        console.error("DATABASE ERROR DETAIL:", (error as any).detail);
+      }
       throw new Error(
         `findUserById failed: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -111,6 +136,25 @@ class UserService {
 
       const accessToken = generateAccTok({ sub: newUser.id });
       const refreshToken = generateRefTok({ sub: newUser.id });
+
+      // Auto-provision default workspace on signup
+      const code = generateInviteCode();
+      const [newWorkspace] = await db
+        .insert(workspacesTable)
+        .values({
+          name: "My Workspace",
+          ownerId: newUser.id,
+          inviteCode: code,
+        })
+        .returning();
+
+      if (newWorkspace) {
+        await db.insert(workspaceMembersTable).values({
+          workspaceId: newWorkspace.id,
+          userId: newUser.id,
+          role: "owner",
+        });
+      }
 
       await this.storeRefreshTokenInDB(newUser.id, refreshToken);
 

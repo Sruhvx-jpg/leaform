@@ -4,6 +4,7 @@
 //3. imports should first start with pnpm package -> in house modules/packages -> current working directory files
 
 import { eq, and, sql } from "drizzle-orm";
+import { z } from "zod";
 
 // in house modules
 import db, {
@@ -13,26 +14,19 @@ import db, {
   fieldValidationsTable,
   ValidationRules,
   FieldStyleConfig,
+  workspaceMembersTable,
 } from "@repo/database";
 import { apiErr } from "@repo/utils";
 
-export interface SaveFieldInput {
-  type?: string;
-  label: string;
-  description?: string;
-  placeholder?: string;
-  required?: boolean;
-  font?: string;
-  style?: FieldStyleConfig;
-  options?: string[];
-  validationRules?: ValidationRules;
-}
-
-export interface FormAnswerInput {
-  fieldId?: string;
-  label: string;
-  value: string | number | boolean | string[];
-}
+import {
+  SaveFieldInputType,
+  SaveFormInputType,
+  FormAnswerInputType,
+  GetPublicFormOutputType,
+  saveFormInputSchema,
+  formAnswerInputSchema,
+  GetFormSubmissionsOutputType,
+} from "./model";
 
 class FormService {
   // ========================================== private methods ====================================================
@@ -51,6 +45,7 @@ class FormService {
 
   private async createFormRow(
     ownerId: string,
+    workspaceId: string,
     title: string,
     description?: string,
     theme?: any,
@@ -61,6 +56,7 @@ class FormService {
         .insert(formsTable)
         .values({
           ownerId,
+          workspaceId,
           title,
           description: description || null,
           theme: theme || null,
@@ -120,7 +116,7 @@ class FormService {
     return null;
   }
 
-  private async saveFieldsRows(formId: string, fields: SaveFieldInput[]) {
+  private async saveFieldsRows(formId: string, fields: SaveFieldInputType[]) {
     try {
       if (!fields || fields.length === 0) return [];
       const fieldRows = fields.map((f, idx) => {
@@ -148,7 +144,7 @@ class FormService {
           description: f.description || null,
           placeholder: f.placeholder || null,
           isRequired: !!f.required,
-          orderIndex: idx,
+          orderIndex: f.orderIndex !== undefined ? f.orderIndex : idx,
           font: f.font || "Inter",
           style: f.style || null,
           options: f.options || null,
@@ -170,9 +166,29 @@ class FormService {
 
   // ========================================= public methods ======================================================
 
-  public async getUserForms(ownerId: string) {
+  public async getUserForms(ownerId: string, workspaceId: string) {
     try {
-      const forms = await this.getFormsByOwnerId(ownerId);
+      // Validate that user is a member of the workspace
+      const [membership] = await db
+        .select()
+        .from(workspaceMembersTable)
+        .where(
+          and(
+            eq(workspaceMembersTable.workspaceId, workspaceId),
+            eq(workspaceMembersTable.userId, ownerId),
+          ),
+        );
+
+      if (!membership) {
+        throw apiErr.dataNotFound("You are not a member of this workspace.");
+      }
+
+      // Fetch forms belonging to this workspace, or legacy owner forms if this is default/no workspace specified
+      const forms = await db
+        .select()
+        .from(formsTable)
+        .where(eq(formsTable.workspaceId, workspaceId));
+
       if (!forms || forms.length === 0) {
         return 0 as const;
       }
@@ -188,28 +204,55 @@ class FormService {
 
   public async saveForm(
     ownerId: string,
-    payload: {
-      id?: string;
-      title: string;
-      description?: string;
-      theme?: any;
-      state?: "drafted" | "published" | "closed";
-      fields: SaveFieldInput[];
-    },
+    payload: SaveFormInputType,
   ) {
     try {
+      const validatedPayload = await saveFormInputSchema.parseAsync(payload);
+      const workspaceId = validatedPayload.workspaceId;
+
+      // Validate member read/write permissions
+      const [membership] = await db
+        .select()
+        .from(workspaceMembersTable)
+        .where(
+          and(
+            eq(workspaceMembersTable.workspaceId, workspaceId),
+            eq(workspaceMembersTable.userId, ownerId),
+          ),
+        );
+
+      if (!membership) {
+        throw apiErr.dataNotFound("You are not a member of this workspace.");
+      }
+      if (membership.role === "read") {
+        throw apiErr.dataNotFound("You have read-only access to this workspace.");
+      }
+
       let form: any = null;
-      if (payload.id) {
+      if (validatedPayload.id) {
+        // Validate form belongs to this workspace
+        const [existingForm] = await db
+          .select()
+          .from(formsTable)
+          .where(eq(formsTable.id, validatedPayload.id));
+
+        if (!existingForm) {
+          throw apiErr.dataNotFound("Form not found.");
+        }
+        if (existingForm.workspaceId && existingForm.workspaceId !== workspaceId) {
+          throw apiErr.dataNotFound("Form does not belong to this workspace.");
+        }
+
         const [updated] = await db
           .update(formsTable)
           .set({
-            title: payload.title,
-            description: payload.description || null,
-            theme: payload.theme || null,
-            state: payload.state || "drafted",
+            title: validatedPayload.title,
+            description: validatedPayload.description || null,
+            theme: validatedPayload.theme || null,
+            state: validatedPayload.state || "drafted",
             updatedAt: new Date(),
           })
-          .where(eq(formsTable.id, payload.id))
+          .where(eq(formsTable.id, validatedPayload.id))
           .returning();
 
         form = updated;
@@ -221,15 +264,16 @@ class FormService {
       if (!form) {
         form = await this.createFormRow(
           ownerId,
-          payload.title,
-          payload.description,
-          payload.theme,
-          payload.state,
+          workspaceId,
+          validatedPayload.title,
+          validatedPayload.description,
+          validatedPayload.theme,
+          validatedPayload.state,
         );
       }
 
-      if (form && payload.fields && payload.fields.length > 0) {
-        await this.saveFieldsRows(form.id, payload.fields);
+      if (form && validatedPayload.fields && validatedPayload.fields.length > 0) {
+        await this.saveFieldsRows(form.id, validatedPayload.fields);
       }
       return form;
     } catch (error) {
@@ -241,12 +285,41 @@ class FormService {
     }
   }
 
-  public async deleteForm(ownerId: string, formId: string) {
+  public async deleteForm(userId: string, formId: string) {
     try {
+      const [formToDelete] = await db
+        .select()
+        .from(formsTable)
+        .where(eq(formsTable.id, formId));
+
+      if (!formToDelete) {
+        throw apiErr.dataNotFound("Form not found.");
+      }
+
+      if (formToDelete.workspaceId) {
+        const [membership] = await db
+          .select()
+          .from(workspaceMembersTable)
+          .where(
+            and(
+              eq(workspaceMembersTable.workspaceId, formToDelete.workspaceId),
+              eq(workspaceMembersTable.userId, userId),
+            ),
+          );
+
+        if (!membership || membership.role === "read") {
+          throw apiErr.dataNotFound("Unauthorized to delete forms in this workspace.");
+        }
+      } else {
+        if (formToDelete.ownerId !== userId) {
+          throw apiErr.dataNotFound("You are not the owner of this form.");
+        }
+      }
+
       await db.delete(formFieldsTable).where(eq(formFieldsTable.formId, formId));
       const [deleted] = await db
         .delete(formsTable)
-        .where(and(eq(formsTable.id, formId), eq(formsTable.ownerId, ownerId)))
+        .where(eq(formsTable.id, formId))
         .returning();
       return deleted;
     } catch (error) {
@@ -284,10 +357,11 @@ class FormService {
 
   public async submitFormResponse(
     formId: string,
-    answers: FormAnswerInput[],
+    answers: FormAnswerInputType[],
     respondentIp?: string,
   ) {
     try {
+      const validatedAnswers = await z.array(formAnswerInputSchema).parseAsync(answers);
       const [form] = await db.select().from(formsTable).where(eq(formsTable.id, formId));
 
       if (!form) {
@@ -302,7 +376,7 @@ class FormService {
         .orderBy(formFieldsTable.orderIndex);
 
       for (const field of fields) {
-        const ans = answers.find((a) => a.fieldId === field.id);
+        const ans = validatedAnswers.find((a) => a.fieldId === field.id);
         const val = ans?.value;
         const hasVal =
           val !== undefined && val !== null && (typeof val !== "string" || val.trim() !== "");
@@ -360,7 +434,7 @@ class FormService {
         .insert(formSubmissionsTable)
         .values({
           formId,
-          answers,
+          answers: validatedAnswers,
           respondentIp: respondentIp || null,
         })
         .returning();
@@ -389,6 +463,11 @@ class FormService {
         fields,
       };
     } catch (error) {
+      console.error("DATABASE ERROR in getFormWithFields:", error);
+      if (error && typeof error === "object") {
+        console.error("DATABASE ERROR CAUSE:", (error as any).cause);
+        console.error("DATABASE ERROR DETAIL:", (error as any).detail);
+      }
       throw new Error(
         `getFormWithFields failed: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -411,66 +490,45 @@ class FormService {
     }
   }
 
-  public async getAvailableFieldTypes() {
+
+
+  public async getFormSubmissions(ownerId: string, formId: string): Promise<GetFormSubmissionsOutputType> {
     try {
-      const result = await db.execute(sql`
-        SELECT enumlabel 
-        FROM pg_enum 
-        JOIN pg_type ON pg_enum.enumtypid = pg_type.oid 
-        WHERE pg_type.typname = 'field_type'
-        ORDER BY pg_enum.enumsortorder
-      `);
+      const [form] = await db
+        .select()
+        .from(formsTable)
+        .where(and(eq(formsTable.id, formId), eq(formsTable.ownerId, ownerId)));
 
-      const dbEnumValues = result.rows.map((row: any) => row.enumlabel as string);
+      if (!form) {
+        throw apiErr.unauthorizedAccess("form doesnt exist");
+      }
 
-      const metadataMap: Record<string, { name: string; category: string; icon: string }> = {
-        short_text: { name: "Short Text", category: "Text", icon: "FileText" },
-        long_text: { name: "Long Text", category: "Text", icon: "AlignLeft" },
-        rich_text: { name: "Rich Text Editor", category: "Text", icon: "Edit3" },
-        email: { name: "Email Address", category: "Contact", icon: "Mail" },
-        phone_number: { name: "Phone Number", category: "Contact", icon: "Phone" },
-        address: { name: "Street Address", category: "Contact", icon: "MapPin" },
-        url: { name: "Website URL", category: "Contact", icon: "Globe" },
-        number: { name: "Number Input", category: "Choice", icon: "Hash" },
-        slider: { name: "Range Slider", category: "Choice", icon: "Sliders" },
-        multiple_choice: { name: "Multiple Choice", category: "Choice", icon: "CheckSquare" },
-        checkboxes: { name: "Checkboxes", category: "Choice", icon: "CheckSquare" },
-        dropdown: { name: "Dropdown Select", category: "Choice", icon: "ChevronDown" },
-        picture_choice: { name: "Picture Choice", category: "Choice", icon: "Image" },
-        date: { name: "Date Picker", category: "Date & Time", icon: "Calendar" },
-        time: { name: "Time Picker", category: "Date & Time", icon: "Clock" },
-        rating: { name: "Star Rating", category: "Feedback", icon: "Star" },
-        review: { name: "Customer Review", category: "Feedback", icon: "MessageSquare" },
-        nps: { name: "Net Promoter Score (NPS)", category: "Feedback", icon: "BarChart3" },
-        opinion_scale: { name: "Opinion Scale", category: "Feedback", icon: "SlidersHorizontal" },
-        yes_no: { name: "Yes / No Toggle", category: "Choice", icon: "ToggleLeft" },
-        statement: { name: "Statement Block", category: "Layout", icon: "Info" },
-        matrix: { name: "Matrix Grid", category: "Advanced", icon: "Grid" },
-        ranking: { name: "Drag & Drop Ranking", category: "Advanced", icon: "ListOrdered" },
-        signature: { name: "E-Signature", category: "Advanced", icon: "PenTool" },
-        payment: { name: "Payment Integration", category: "Advanced", icon: "CreditCard" },
-        color_picker: { name: "Color Picker", category: "Advanced", icon: "Palette" },
-        terms_consent: { name: "Terms & Consent", category: "Legal", icon: "ShieldCheck" },
-        captcha: { name: "CAPTCHA Verification", category: "Security", icon: "Lock" },
+      const fields = await db
+        .select()
+        .from(formFieldsTable)
+        .where(eq(formFieldsTable.formId, formId))
+        .orderBy(formFieldsTable.orderIndex);
+
+      const submissions = await db
+        .select()
+        .from(formSubmissionsTable)
+        .where(eq(formSubmissionsTable.formId, formId))
+        .orderBy(sql`${formSubmissionsTable.submittedAt} DESC`);
+
+      return {
+        form: {
+          id: form.id,
+          title: form.title,
+          description: form.description,
+          state: form.state,
+        },
+        fields,
+        submissions,
       };
-
-      return dbEnumValues.map((type) => {
-        const meta = metadataMap[type] || {
-          name: type
-            .split("_")
-            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" "),
-          category: "Advanced",
-          icon: "HelpCircle",
-        };
-        return {
-          type,
-          ...meta,
-        };
-      });
     } catch (error) {
-      console.error("FormService.getAvailableFieldTypes internal error:", error);
-      throw apiErr.unknownErr("Failed to fetch available field types.");
+      if (error instanceof apiErr) throw error;
+      console.error("FormService.getFormSubmissions internal error:", error);
+      throw apiErr.unknownErr("Failed to fetch form submissions.");
     }
   }
 }

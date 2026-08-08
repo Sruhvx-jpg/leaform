@@ -27,6 +27,18 @@
       "require": "./form/*.ts",
       "default": "./form/*.ts"
     },
+    "./workspace": {
+      "types": "./workspace/core.ts",
+      "import": "./workspace/core.ts",
+      "require": "./workspace/core.ts",
+      "default": "./workspace/core.ts"
+    },
+    "./workspace/*": {
+      "types": "./workspace/*.ts",
+      "import": "./workspace/*.ts",
+      "require": "./workspace/*.ts",
+      "default": "./workspace/*.ts"
+    },
     "./clients/*": {
       "types": "./clients/*.ts",
       "import": "./clients/*.ts",
