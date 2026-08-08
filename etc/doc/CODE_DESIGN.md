@@ -30,8 +30,7 @@ graph TD
 
 - **ORM**: Drizzle ORM with PostgreSQL database.
 - **Location**: See [schema.ts](file:///home/dron/Documents/programming/monoreop-tRPC/packages/database/schema.ts) and [models/](file:///home/dron/Documents/programming/monoreop-tRPC/packages/database/models).
-- **Rule**: Export TypeScript types for all database tables (`InferSelectModel`, `InferInsertModel`). Map complex JSONB properties using Drizzle's `.$type<T>()` modifiers (e.g. `ValidationRules`) to prevent type skipping or the use of `any`.
-- **Seeding**: Use the database seed script `seedValidations.ts` to populate default validation rules for form field formats directly into the PostgreSQL database.
+- **Rule**: Export TypeScript types for all database tables (`InferSelectModel`, `InferInsertModel`). Map complex JSONB properties using Drizzle's `.$type<T>()` modifiers (e.g. `FieldValidationConfig`) to prevent type skipping or the use of `any`.
 
 ### 2.2 Domain Business Services (`packages/services`)
 
