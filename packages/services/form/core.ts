@@ -9,10 +9,9 @@ import { z } from "zod";
 // in house modules
 import db, {
   formsTable,
-  formFieldsTable,
+  textFieldTable,
   formSubmissionsTable,
-  fieldValidationsTable,
-  ValidationRules,
+  FieldValidationConfig,
   FieldStyleConfig,
   workspaceMembersTable,
 } from "@repo/database";
@@ -79,7 +78,7 @@ class FormService {
   private async validateFieldValue(
     fieldType: string,
     strVal: string,
-    rules: ValidationRules,
+    rules: FieldValidationConfig,
   ): Promise<string | null> {
     // 1. Fetch custom pattern from rules first
     const customPattern = rules.pattern || rules.customRegex;
@@ -95,22 +94,48 @@ class FormService {
       }
     }
 
-    // 2. Fetch default pattern from leaf_field_validations table
-    try {
-      const [validation] = await db
-        .select()
-        .from(fieldValidationsTable)
-        .where(eq(fieldValidationsTable.fieldType, fieldType as any))
-        .limit(1);
+    // 2. Fallback to static default pattern for common field types
+    const defaultPatterns: Record<string, { pattern: string; message: string }> = {
+      email: {
+        pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+        message: "Please enter a valid email address.",
+      },
+      url: {
+        pattern: "^(https?:\\/\\/)?([a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})([\\/\\w.-]*)*\\/?$",
+        message: "Please enter a valid URL.",
+      },
+      phone_number: {
+        pattern: "^\\+?[\\d\\s\\-()]{7,20}$",
+        message: "Please enter a valid phone number.",
+      },
+      number: {
+        pattern: "^-?\\d+(\\.\\d+)?$",
+        message: "Please enter a valid number.",
+      },
+      date: {
+        pattern: "^\\d{4}-\\d{2}-\\d{2}$",
+        message: "Please enter a valid date in YYYY-MM-DD format.",
+      },
+      time: {
+        pattern: "^([01]\\d|2[0-3]):[0-5]\\d$",
+        message: "Please enter a valid time in HH:MM format.",
+      },
+      color_picker: {
+        pattern: "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+        message: "Please enter a valid hex color code.",
+      },
+    };
 
-      if (validation && validation.regexPattern) {
-        const regex = new RegExp(validation.regexPattern);
+    const defaultPattern = defaultPatterns[fieldType];
+    if (defaultPattern) {
+      try {
+        const regex = new RegExp(defaultPattern.pattern);
         if (!regex.test(strVal)) {
-          return validation.errorMessage || "Invalid format.";
+          return defaultPattern.message;
         }
+      } catch (e) {
+        console.error("Invalid default regex pattern for type:", fieldType, e);
       }
-    } catch (e) {
-      console.error("Error executing database field validation:", e);
     }
 
     return null;
@@ -139,21 +164,18 @@ class FormService {
 
         return {
           formId,
-          fieldType: fType,
           label: f.label,
           description: f.description || null,
           placeholder: f.placeholder || null,
-          isRequired: !!f.required,
+          isRequired: f.required !== undefined ? f.required : true,
           orderIndex: f.orderIndex !== undefined ? f.orderIndex : idx,
-          font: f.font || "Inter",
           style: f.style || null,
-          options: f.options || null,
           validationRules: rules,
         };
       });
 
       const inserted = await db
-        .insert(formFieldsTable)
+        .insert(textFieldTable)
         .values(fieldRows as any)
         .returning();
       return inserted;
@@ -257,7 +279,7 @@ class FormService {
 
         form = updated;
         if (form) {
-          await db.delete(formFieldsTable).where(eq(formFieldsTable.formId, form.id));
+          await db.delete(textFieldTable).where(eq(textFieldTable.formId, form.id));
         }
       }
 
@@ -316,7 +338,7 @@ class FormService {
         }
       }
 
-      await db.delete(formFieldsTable).where(eq(formFieldsTable.formId, formId));
+      await db.delete(textFieldTable).where(eq(textFieldTable.formId, formId));
       const [deleted] = await db
         .delete(formsTable)
         .where(eq(formsTable.id, formId))
@@ -371,9 +393,9 @@ class FormService {
       // Fetch fields to validate required questions
       const fields = await db
         .select()
-        .from(formFieldsTable)
-        .where(eq(formFieldsTable.formId, formId))
-        .orderBy(formFieldsTable.orderIndex);
+        .from(textFieldTable)
+        .where(eq(textFieldTable.formId, formId))
+        .orderBy(textFieldTable.orderIndex);
 
       for (const field of fields) {
         const ans = validatedAnswers.find((a) => a.fieldId === field.id);
@@ -389,7 +411,7 @@ class FormService {
 
         // If not empty, check types and rules
         if (hasVal) {
-          const fType = field.fieldType || "short_text";
+          const fType = "short_text";
           const rules = field.validationRules || {};
 
           // 2. Format validation (pattern check from database)
@@ -398,34 +420,16 @@ class FormService {
             throw apiErr.badRequest(errorMsg);
           }
 
-          // 3. Number-specific validation
-          if (fType === "number") {
-            const num = Number(strVal);
-            if (isNaN(num)) {
-              throw apiErr.badRequest(`Field "${field.label}" must be a number.`);
-            }
-            if (rules.min !== undefined && num < Number(rules.min)) {
-              throw apiErr.badRequest(
-                `Field "${field.label}" value must be at least ${rules.min}.`,
-              );
-            }
-            if (rules.max !== undefined && num > Number(rules.max)) {
-              throw apiErr.badRequest(`Field "${field.label}" value cannot exceed ${rules.max}.`);
-            }
+          // 3. Min/Max text length checks
+          if (rules.minLength !== undefined && strVal.length < Number(rules.minLength)) {
+            throw apiErr.badRequest(
+              `Field "${field.label}" must be at least ${rules.minLength} characters.`,
+            );
           }
-
-          // 4. Min/Max text length checks
-          if (["short_text", "long_text", "rich_text"].includes(fType)) {
-            if (rules.minLength !== undefined && strVal.length < Number(rules.minLength)) {
-              throw apiErr.badRequest(
-                `Field "${field.label}" must be at least ${rules.minLength} characters.`,
-              );
-            }
-            if (rules.maxLength !== undefined && strVal.length > Number(rules.maxLength)) {
-              throw apiErr.badRequest(
-                `Field "${field.label}" cannot exceed ${rules.maxLength} characters.`,
-              );
-            }
+          if (rules.maxLength !== undefined && strVal.length > Number(rules.maxLength)) {
+            throw apiErr.badRequest(
+              `Field "${field.label}" cannot exceed ${rules.maxLength} characters.`,
+            );
           }
         }
       }
@@ -455,12 +459,12 @@ class FormService {
 
       const fields = await db
         .select()
-        .from(formFieldsTable)
-        .where(eq(formFieldsTable.formId, formId));
+        .from(textFieldTable)
+        .where(eq(textFieldTable.formId, formId));
 
       return {
         ...form,
-        fields,
+        fields: fields.map((f) => ({ ...f, fieldType: "short_text" })),
       };
     } catch (error) {
       console.error("DATABASE ERROR in getFormWithFields:", error);
@@ -505,9 +509,9 @@ class FormService {
 
       const fields = await db
         .select()
-        .from(formFieldsTable)
-        .where(eq(formFieldsTable.formId, formId))
-        .orderBy(formFieldsTable.orderIndex);
+        .from(textFieldTable)
+        .where(eq(textFieldTable.formId, formId))
+        .orderBy(textFieldTable.orderIndex);
 
       const submissions = await db
         .select()
@@ -522,7 +526,7 @@ class FormService {
           description: form.description,
           state: form.state,
         },
-        fields,
+        fields: fields.map((f) => ({ ...f, fieldType: "short_text" })),
         submissions,
       };
     } catch (error) {
