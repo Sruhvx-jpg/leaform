@@ -25,7 +25,7 @@ graph TB
     end
 
     subgraph Domain & Persistence Tier ["Domain & Persistence Tier"]
-        SERVICES["Services Layer<br/>(Form Core, User Core)"]
+        SERVICES["Services Layer<br/>(Form, User, Workspace)"]
         DRIZZLE["Drizzle ORM Engine"]
         PG[("PostgreSQL Database<br/>Port 5432")]
         REDIS[("Redis Server<br/>Port 6379 (Rate Limiting)")]
@@ -131,14 +131,61 @@ Data models in [models/](file:///home/dron/Documents/programming/monoreop-tRPC/p
 
 - **Users (`leaf_account`)**: Stores user credentials, email addresses, and profile data.
 - **Refresh Tokens (`app_refresh_tokens`)**: Stores active user session tokens with expiration dates.
-- **Forms (`form`)**: Stores form titles, descriptions, owner IDs, and status.
+- **Workspaces (`leaf_workspaces`)**: Stores workspace name, owner ID, and a unique invite code (`LF-XXXX-XXXX`).
+- **Workspace Members (`leaf_workspace_members`)**: Maps users to workspaces with a role (`owner`, `read`, `write`).
+- **Forms (`form`)**: Stores form titles, descriptions, owner IDs, workspace reference, and status.
 - **Form Fields (`form_fields`)**: Stores field types (text, choice, rating, file upload, payment, captcha, etc.).
 - **Field Validations (`leaf_field_validations`)**: Stores regex validation patterns and error messages per field type to run dynamic validations.
 - **Form Submissions (`form_submissions`)**: Stores submitted responses in JSON format.
 
 ---
 
-## 6. Environment Configuration
+## 6. Workspace & Role-Based Access
+
+LeafForm supports multi-tenant workspaces with role-based access control. Each user gets a default workspace on signup. Users can create additional workspaces (up to 5) or join others via invite codes.
+
+### Roles
+
+| Role    | Create/Edit Forms | Delete Forms | View Forms | Manage Members |
+| ------- | ----------------- | ------------ | ---------- | -------------- |
+| `owner` | ✅                | ✅           | ✅         | ✅             |
+| `write` | ✅                | ✅           | ✅         | ❌             |
+| `read`  | ❌                | ❌           | ✅         | ❌             |
+
+### Workspace Join Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant Web as Web Client
+    participant API as tRPC Workspace Router
+    participant Service as Workspace Service
+    participant DB as PostgreSQL
+
+    User->>Web: Enter invite code (LF-XXXX-XXXX)
+    Web->>API: workspace.joinWorkspace({ inviteCode })
+    API->>Service: joinWorkspace(userId, inviteCode)
+    Service->>DB: Lookup workspace by invite code
+    Service->>DB: Check if user is already owner or member
+    alt Already a member
+        Service-->>Web: Return validation error
+    else New member
+        Service->>DB: Insert workspace_member (role: read)
+        Service-->>Web: Return workspace data
+    end
+    Web-->>User: Switch to joined workspace
+```
+
+### Key Implementation Details
+
+- **Auto-provisioning**: `WorkspaceService.provisionDefaultWorkspace()` runs during user signup in `UserService`, creating a default "My Workspace" with a unique invite code.
+- **Invite codes**: Generated as `LF-XXXX-XXXX` format using alphanumeric characters.
+- **Frontend context**: A global `WorkspaceProvider` shares the active workspace and workspace list across all authenticated pages. The query is disabled on public pages (`/welcome`, `/`) to prevent unauthorized API calls before login.
+
+---
+
+## 7. Environment Configuration
 
 - **Environment Validation**:
   - The web application validates variables with `@t3-oss/env-nextjs` in [env.js](file:///home/dron/Documents/programming/monoreop-tRPC/apps/web/env.js).
